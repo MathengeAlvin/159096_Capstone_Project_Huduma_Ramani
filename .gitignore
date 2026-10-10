@@ -36,3 +36,6 @@ venv/
 .vscode/
 .idea/
 *.log
+
+# Model
+Model/
