@@ -23,6 +23,8 @@ web-build/
 .env
 .env*.local
 *.pem
+serviceAccountKey.json
+*serviceAccountKey*.json
 
 # Python & ML (Backend Sprint)
 __pycache__/
