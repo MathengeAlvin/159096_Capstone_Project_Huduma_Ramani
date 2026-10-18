@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.db.models import Q
 
@@ -41,6 +41,19 @@ class ServiceViewSet(viewsets.ModelViewSet):
                 Q(location__icontains=search)
             )
         return qs
+
+    @action(detail=False, methods=["get"])
+    def map_all(self, request):
+        """
+        Returns all facilities with coordinates for mapping without pagination.
+        """
+        qs = self.get_queryset().filter(status="ACTIVE")
+        serializer = self.get_serializer(qs, many=True)
+        return Response({
+            "status": "success",
+            "count": qs.count(),
+            "results": serializer.data
+        })
 
 
 class ProviderViewSet(viewsets.ModelViewSet):

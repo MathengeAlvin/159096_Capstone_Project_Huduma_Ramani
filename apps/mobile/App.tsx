@@ -13,7 +13,11 @@ import { ServiceDetailScreen } from "./src/screens/ServiceDetailScreen";
 import { SavedScreen } from "./src/screens/SavedScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { BottomNavBar } from "./src/components/BottomNavBar";
-import { fetchLiveRecommendations, submitLiveRating } from "./src/services/api";
+import {
+  fetchLiveRecommendations,
+  submitLiveRating,
+  fetchAllServicesForMap,
+} from "./src/services/api";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -29,10 +33,11 @@ export default function App() {
   ]);
 
   const [services, setServices] = useState<MobileService[]>(MOCK_SERVICES);
+  const [mapServices, setMapServices] = useState<MobileService[]>(MOCK_SERVICES);
   const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load recommendations on mount or when user settlement changes
+  // Load recommendations and all map facilities on mount or when user settlement changes
   useEffect(() => {
     loadRecommendations(currentUser.settlement, currentUser.interests);
   }, [currentUser.settlement]);
@@ -43,14 +48,23 @@ export default function App() {
   ) => {
     setIsLoading(true);
     try {
-      const res = await fetchLiveRecommendations(settlement, interests, 15);
-      setServices(res.services);
-      setIsLiveApi(res.isLive);
+      const [recRes, mapRes] = await Promise.all([
+        fetchLiveRecommendations(settlement, interests, 15),
+        fetchAllServicesForMap(settlement),
+      ]);
+      setServices(recRes.services);
+      setMapServices(mapRes.services);
+      setIsLiveApi(recRes.isLive || mapRes.isLive);
     } catch {
       setIsLiveApi(false);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSettlementChange = (newSettlement: "Kibera" | "Mathare") => {
+    setCurrentUser((prev) => ({ ...prev, settlement: newSettlement }));
+    loadRecommendations(newSettlement, currentUser.interests);
   };
 
   const handleAuthSuccess = (user: ResidentUser, isNewUser: boolean) => {
@@ -136,8 +150,10 @@ export default function App() {
           <HomeScreen
             user={currentUser}
             services={services}
+            mapServices={mapServices}
             onSelectService={setSelectedService}
             onSearchPress={() => setActiveTab("search")}
+            onSettlementChange={handleSettlementChange}
             isLive={isLiveApi}
             isLoading={isLoading}
             onRefresh={() =>

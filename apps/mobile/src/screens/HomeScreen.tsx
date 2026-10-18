@@ -16,8 +16,10 @@ import { MapViewComponent } from "../components/MapViewComponent";
 interface HomeScreenProps {
   user: ResidentUser;
   services: MobileService[];
+  mapServices?: MobileService[];
   onSelectService: (service: MobileService) => void;
   onSearchPress: () => void;
+  onSettlementChange?: (settlement: "Kibera" | "Mathare") => void;
   isLive?: boolean;
   isLoading?: boolean;
   onRefresh?: () => void;
@@ -29,8 +31,10 @@ const CARD_WIDTH = width * 0.44;
 export function HomeScreen({
   user,
   services,
+  mapServices = [],
   onSelectService,
   onSearchPress,
+  onSettlementChange,
   isLive = false,
   isLoading = false,
   onRefresh,
@@ -93,11 +97,13 @@ export function HomeScreen({
           </View>
         </View>
 
-        {/* OpenStreetMap Interactive View */}
+        {/* OpenStreetMap Interactive View (Renders All Settlement Providers) */}
         <MapViewComponent
-          services={services}
+          services={mapServices.length > 0 ? mapServices : services}
+          recommendedServices={services}
           onSelectService={onSelectService}
           settlement={user.settlement}
+          onSettlementChange={onSettlementChange}
         />
 
         {/* Recommended for You Carousel */}

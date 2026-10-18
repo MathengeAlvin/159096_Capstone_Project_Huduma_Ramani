@@ -128,6 +128,49 @@ export async function fetchLiveRecommendations(
 }
 
 /**
+ * Fetches all community facilities with coordinates for mapping.
+ */
+export async function fetchAllServicesForMap(
+  settlement?: "Kibera" | "Mathare",
+  category?: string
+): Promise<{ services: MobileService[]; isLive: boolean; total: number }> {
+  const center =
+    settlement === "Mathare"
+      ? { lat: -1.2612, lon: 36.8521 }
+      : { lat: -1.3142, lon: 36.7865 };
+
+  try {
+    let url = `${API_BASE_URL}/services/map_all/`;
+    const params: string[] = [];
+    if (settlement) params.push(`settlement=${encodeURIComponent(settlement)}`);
+    if (category && category !== "All") params.push(`category=${encodeURIComponent(category)}`);
+    if (params.length > 0) url += `?${params.join("&")}`;
+
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    const items: RecommendationResponseItem[] = data.results || [];
+
+    if (items.length > 0) {
+      return {
+        services: items.map((i) => mapDjangoToMobileService(i, center)),
+        isLive: true,
+        total: data.count || items.length,
+      };
+    }
+    throw new Error("No map points returned");
+  } catch (err) {
+    console.warn("[Huduma Mobile API] Could not load all facilities from API, using fallback:", err);
+    return {
+      services: MOCK_SERVICES,
+      isLive: false,
+      total: MOCK_SERVICES.length,
+    };
+  }
+}
+
+/**
  * Submits a 1-to-5 star rating to the backend and recalculates Bayesian priors.
  */
 export async function submitLiveRating(
