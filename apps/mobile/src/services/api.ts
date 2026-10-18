@@ -2,9 +2,11 @@ import { Platform } from "react-native";
 import { MobileService, ServiceCategory } from "../types";
 import { MOCK_SERVICES } from "../data/mockServices";
 
-// Auto-detect localhost vs Android emulator IP
+// Auto-detect web localhost vs physical device / local Wi-Fi LAN IP
 const DEFAULT_HOST =
-  Platform.OS === "android" ? "http://10.0.2.2:8000/api" : "http://localhost:8000/api";
+  Platform.OS === "web"
+    ? "http://localhost:8000/api"
+    : "http://192.168.100.25:8000/api";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST;
 
