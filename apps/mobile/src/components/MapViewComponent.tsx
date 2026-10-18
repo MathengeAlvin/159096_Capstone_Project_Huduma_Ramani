@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
 import { MobileService, ServiceCategory } from "../types";
 import { ALL_CATEGORIES } from "../data/mockServices";
 
@@ -293,7 +294,10 @@ export function MapViewComponent({
           });
 
           function selectService(id) {
-            if (window.parent) {
+            var payload = JSON.stringify({ type: 'HUDUMA_SELECT_SERVICE', serviceId: id });
+            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage(payload);
+            } else if (window.parent) {
               window.parent.postMessage({ type: 'HUDUMA_SELECT_SERVICE', serviceId: id }, '*');
             }
           }
@@ -420,33 +424,26 @@ export function MapViewComponent({
             title="Interactive OpenStreetMap"
           />
         ) : (
-          // Mobile native fallback with interactive preview
-          <View style={styles.nativeFallback}>
-            <Text style={styles.nativeTitle}>
-              {activeSettlement} OpenStreetMap Directory
-            </Text>
-            <Text style={styles.nativeSub}>
-              Displaying {filteredServices.length} verified community providers
-            </Text>
-            <ScrollView style={styles.nativePinsList}>
-              {filteredServices.slice(0, 10).map((s) => (
-                <TouchableOpacity
-                  key={s.id}
-                  style={styles.nativePinRow}
-                  onPress={() => onSelectService(s)}
-                >
-                  <Text style={styles.nativePinDot}>📍</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.nativePinName}>{s.name}</Text>
-                    <Text style={styles.nativePinCat}>
-                      {s.category} • ★ {s.rating.toFixed(1)}
-                    </Text>
-                  </View>
-                  <Text style={styles.nativePinArrow}>→</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+          <WebView
+            originWhitelist={["*"]}
+            source={{ html: leafletHtml }}
+            style={styles.webView}
+            onMessage={(event) => {
+              try {
+                const data = JSON.parse(event.nativeEvent.data);
+                if (data.type === "HUDUMA_SELECT_SERVICE") {
+                  const match = services.find((s) => s.id === data.serviceId);
+                  if (match) onSelectService(match);
+                }
+              } catch (e) {
+                console.warn("WebView onMessage parse error", e);
+              }
+            }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            scalesPageToFit={false}
+            scrollEnabled={false}
+          />
         )}
 
         {/* Map Legend Overlay at Bottom */}
@@ -613,48 +610,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#374151",
   },
-  nativeFallback: {
+  webView: {
     flex: 1,
-    padding: 12,
-    backgroundColor: "#FFFFFF",
-  },
-  nativeTitle: {
-    fontSize: 13,
-    fontWeight: "900",
-    color: "#111827",
-    marginBottom: 2,
-  },
-  nativeSub: {
-    fontSize: 11,
-    color: "#6B7280",
-    marginBottom: 8,
-  },
-  nativePinsList: {
-    flex: 1,
-  },
-  nativePinRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  nativePinDot: {
-    marginRight: 8,
-    fontSize: 14,
-  },
-  nativePinName: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  nativePinCat: {
-    fontSize: 10,
-    color: "#6B7280",
-  },
-  nativePinArrow: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#9CA3AF",
+    backgroundColor: "#E5E7EB",
   },
 });
