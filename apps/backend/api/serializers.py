@@ -31,6 +31,9 @@ class ServiceSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+        extra_kwargs = {
+            "service_id": {"required": False},
+        }
 
 
 class RatingSerializer(serializers.ModelSerializer):

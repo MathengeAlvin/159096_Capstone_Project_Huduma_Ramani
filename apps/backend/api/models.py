@@ -49,6 +49,12 @@ class Service(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        if not self.service_id:
+            import uuid
+            self.service_id = f"svc_{uuid.uuid4().hex[:8]}"
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.title} [{self.category}]"
 

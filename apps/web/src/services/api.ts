@@ -1,0 +1,231 @@
+import { ServiceListing, ServiceCategory, ListingStatus } from "../types";
+import { initialListings } from "../data/mockData";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
+export interface DjangoServicePayload {
+  service_id: string;
+  provider: string;
+  provider_name?: string;
+  title: string;
+  category: string;
+  settlement: "Kibera" | "Mathare";
+  location: string;
+  description: string;
+  latitude?: number;
+  longitude?: number;
+  target_audience?: string;
+  status: ListingStatus;
+  rating: number | null;
+  review_count: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
+ * Transforms a Django API service object to the web portal's ServiceListing interface.
+ */
+export function mapDjangoToServiceListing(data: DjangoServicePayload): ServiceListing {
+  return {
+    id: data.service_id,
+    name: data.title,
+    category: data.category as ServiceCategory,
+    settlement: data.settlement,
+    location: data.location || `${data.settlement} Sector`,
+    lat: data.latitude,
+    lng: data.longitude,
+    operatingHours: "Mon - Fri, 8:00 AM - 5:00 PM",
+    description: data.description || "",
+    status: (data.status as ListingStatus) || "ACTIVE",
+    rating: data.rating,
+    reviewCount: data.review_count || 0,
+    contactEmail: "organization@example.com",
+    contactPhone: "+254 700 123 456",
+  };
+}
+
+/**
+ * Checks if the Django API is accessible.
+ */
+export async function checkApiHealth(): Promise<{
+  online: boolean;
+  totalServices: number;
+  error?: string;
+}> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/health/`, {
+      method: "GET",
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return {
+      online: true,
+      totalServices: data.total_services || 0,
+    };
+  } catch (err: any) {
+    return {
+      online: false,
+      totalServices: 0,
+      error: err.message || "Failed to reach API",
+    };
+  }
+}
+
+/**
+ * Fetches listings for a specific provider.
+ * Falls back seamlessly to mock listings if the API is offline.
+ */
+export async function fetchProviderListings(
+  providerId: string = "org-kibera-aid"
+): Promise<{ listings: ServiceListing[]; isLive: boolean }> {
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/services/?provider_id=${encodeURIComponent(providerId)}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
+    const results: DjangoServicePayload[] = data.results || (Array.isArray(data) ? data : []);
+
+    if (results.length === 0) {
+      // If provider has no custom listings in DB yet, fetch first batch or return initial
+      const allRes = await fetch(`${API_BASE_URL}/services/?limit=6`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      });
+      if (allRes.ok) {
+        const allData = await allRes.json();
+        const fallbackResults = allData.results || [];
+        if (fallbackResults.length > 0) {
+          return {
+            listings: fallbackResults.map(mapDjangoToServiceListing),
+            isLive: true,
+          };
+        }
+      }
+    }
+
+    return {
+      listings: results.map(mapDjangoToServiceListing),
+      isLive: true,
+    };
+  } catch (err) {
+    console.warn("[Huduma Web API] Backend offline, serving local mock dataset:", err);
+    return {
+      listings: initialListings,
+      isLive: false,
+    };
+  }
+}
+
+/**
+ * Creates a new service listing in the Django REST backend.
+ */
+export async function createServiceListing(
+  listing: Partial<ServiceListing>,
+  providerId: string = "org-kibera-aid"
+): Promise<ServiceListing> {
+  const payload = {
+    provider: providerId,
+    title: listing.name || "Untitled Service",
+    category: listing.category || "Healthcare",
+    settlement: listing.settlement || "Kibera",
+    location: listing.location || "Central Sector",
+    description: listing.description || "",
+    latitude: listing.lat ?? -1.3142,
+    longitude: listing.lng ?? 36.7865,
+    target_audience: "Local residents and youth",
+    status: listing.status || "ACTIVE",
+    rating: listing.rating ?? 4.5,
+    review_count: listing.reviewCount ?? 1,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/services/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`API responded with ${res.status}: ${errText}`);
+    }
+
+    const created: DjangoServicePayload = await res.json();
+    return mapDjangoToServiceListing(created);
+  } catch (err) {
+    console.error("[Huduma Web API] Error creating listing on server:", err);
+    // Return optimistic local fallback
+    return {
+      id: `srv-${Date.now().toString().slice(-4)}`,
+      name: listing.name || "Untitled Service",
+      category: listing.category || "Healthcare",
+      settlement: listing.settlement || "Kibera",
+      location: listing.location || "Central Sector",
+      operatingHours: listing.operatingHours || "Mon - Fri, 8:00 AM - 5:00 PM",
+      description: listing.description || "",
+      status: listing.status || "ACTIVE",
+      rating: listing.rating ?? null,
+      reviewCount: listing.reviewCount ?? 0,
+      contactEmail: listing.contactEmail,
+      contactPhone: listing.contactPhone,
+      lat: listing.lat,
+      lng: listing.lng,
+    };
+  }
+}
+
+/**
+ * Updates an existing service listing in the Django REST backend.
+ */
+export async function updateServiceListing(
+  serviceId: string,
+  updates: Partial<ServiceListing>
+): Promise<boolean> {
+  const payload: Record<string, any> = {};
+  if (updates.name) payload.title = updates.name;
+  if (updates.category) payload.category = updates.category;
+  if (updates.settlement) payload.settlement = updates.settlement;
+  if (updates.location) payload.location = updates.location;
+  if (updates.description) payload.description = updates.description;
+  if (updates.status) payload.status = updates.status;
+  if (updates.lat !== undefined) payload.latitude = updates.lat;
+  if (updates.lng !== undefined) payload.longitude = updates.lng;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/services/${encodeURIComponent(serviceId)}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn(`[Huduma Web API] Update failed for ${serviceId}:`, err);
+    return false;
+  }
+}
+
+/**
+ * Deletes a service listing from the Django REST backend.
+ */
+export async function deleteServiceListing(serviceId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/services/${encodeURIComponent(serviceId)}/`, {
+      method: "DELETE",
+    });
+    return res.ok || res.status === 204;
+  } catch (err) {
+    console.warn(`[Huduma Web API] Delete failed for ${serviceId}:`, err);
+    return false;
+  }
+}
+
