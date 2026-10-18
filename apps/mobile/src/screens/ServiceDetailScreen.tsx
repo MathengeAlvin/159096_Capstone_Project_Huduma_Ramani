@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
 import { MobileService } from "../types";
 
 interface ServiceDetailScreenProps {
@@ -43,6 +45,104 @@ export function ServiceDetailScreen({
       `Your request for ${service.name} has been sent to the provider. They will follow up via your registered contact.`
     );
   };
+
+  const snippetHtml = useMemo(() => {
+    const lat = service.coordinates?.latitude ?? -1.3142;
+    const lon = service.coordinates?.longitude ?? 36.7865;
+    const safeTitle = service.name.replace(/'/g, "\\'");
+    const safeLoc = (service.location || service.settlement).replace(/'/g, "\\'");
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+          html, body, #mini-map {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #e5e7eb;
+          }
+          .location-pin {
+            background-color: #dc2626;
+            color: #ffffff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            border: 2.5px solid #ffffff;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.7), 0 3px 6px rgba(0,0,0,0.35);
+          }
+          .leaflet-popup-content-wrapper {
+            border-radius: 4px;
+            border: 1.5px solid #111827;
+            padding: 2px;
+          }
+          .popup-title {
+            font-size: 12px;
+            font-weight: 900;
+            color: #111827;
+            margin: 0;
+          }
+          .popup-sub {
+            font-size: 10px;
+            color: #4b5563;
+          }
+          .osm-tag {
+            position: absolute;
+            bottom: 3px;
+            left: 3px;
+            background: rgba(255,255,255,0.85);
+            font-size: 8px;
+            font-weight: 700;
+            color: #374151;
+            padding: 1px 4px;
+            border-radius: 2px;
+            z-index: 1000;
+          }
+        </style>
+      </head>
+      <body>
+        <div id="mini-map"></div>
+        <div class="osm-tag">© OpenStreetMap</div>
+        <script>
+          const map = L.map('mini-map', {
+            center: [${lat}, ${lon}],
+            zoom: 16,
+            zoomControl: true,
+            dragging: true,
+            touchZoom: true,
+            scrollWheelZoom: true,
+            attributionControl: false
+          });
+
+          L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+          }).addTo(map);
+
+          const icon = L.divIcon({
+            className: 'pin-box',
+            html: '<div class="location-pin">📍</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+
+          const marker = L.marker([${lat}, ${lon}], { icon }).addTo(map);
+          marker.bindPopup("<div class='popup-title'>${safeTitle}</div><div class='popup-sub'>${safeLoc}</div>").openPopup();
+        </script>
+      </body>
+      </html>
+    `;
+  }, [service]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -109,16 +209,44 @@ export function ServiceDetailScreen({
             </View>
           </View>
 
-          {/* Map Snippet Box matching wireframe */}
+          {/* Live OpenStreetMap Snippet */}
           <View style={styles.mapSnippetBox}>
-            <View style={styles.mapGridPattern} />
-            <View style={styles.mapPinIndicator}>
-              <View style={styles.innerPin} />
+            <View style={styles.mapSnippetHeader}>
+              <View style={styles.snippetHeadingRow}>
+                <Ionicons name="map" size={13} color="#000000" />
+                <Text style={styles.mapSnippetText}>LOCATION ON OPENSTREETMAP</Text>
+              </View>
+              <Text style={styles.snippetBadge}>{service.distanceKm} km away</Text>
             </View>
-            <Text style={styles.mapSnippetText}>MAP SNIPPET</Text>
-            <Text style={styles.mapSubtext}>
-              {service.location} • {service.distanceKm} km away
-            </Text>
+
+            <View style={styles.snippetMapSurface}>
+              {Platform.OS === "web" ? (
+                <iframe
+                  srcDoc={snippetHtml}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    border: "none",
+                  }}
+                  title="Service Location Snippet"
+                />
+              ) : (
+                <WebView
+                  originWhitelist={["*"]}
+                  source={{ html: snippetHtml }}
+                  style={styles.snippetWebView}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  scrollEnabled={false}
+                />
+              )}
+            </View>
+
+            <View style={styles.snippetFooter}>
+              <Text style={styles.mapSubtext}>
+                📍 {service.location || service.settlement} • Lat: {service.coordinates.latitude.toFixed(4)}, Lon: {service.coordinates.longitude.toFixed(4)}
+              </Text>
+            </View>
           </View>
 
           {/* Rate This Service Panel matching Screenshot 142402 */}
@@ -304,49 +432,60 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   mapSnippetBox: {
-    height: 100,
     borderWidth: 1.5,
     borderColor: "#000000",
-    backgroundColor: "#F2F4F7",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#FFFFFF",
     marginBottom: 20,
-    position: "relative",
     overflow: "hidden",
   },
-  mapGridPattern: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    borderStyle: "dashed",
-    borderWidth: 1,
-    borderColor: "#E4E7EC",
-  },
-  mapPinIndicator: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: "#000000",
+  mapSnippetHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
   },
-  innerPin: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+  snippetHeadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   mapSnippetText: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#000000",
+    letterSpacing: 0.5,
+  },
+  snippetBadge: {
+    fontSize: 10,
     fontWeight: "800",
-    color: "#475467",
-    letterSpacing: 0.8,
+    color: "#1E40AF",
+    backgroundColor: "#DBEAFE",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+  },
+  snippetMapSurface: {
+    height: 180,
+    backgroundColor: "#E5E7EB",
+  },
+  snippetWebView: {
+    flex: 1,
+  },
+  snippetFooter: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
   },
   mapSubtext: {
-    fontSize: 10,
-    color: "#667085",
-    marginTop: 2,
+    fontSize: 11,
+    color: "#4B5563",
+    fontWeight: "600",
   },
   ratingPanel: {
     borderWidth: 1.5,
