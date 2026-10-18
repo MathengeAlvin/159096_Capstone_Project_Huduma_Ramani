@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import { ServiceDetailScreen } from "./src/screens/ServiceDetailScreen";
 import { SavedScreen } from "./src/screens/SavedScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { BottomNavBar } from "./src/components/BottomNavBar";
+import { fetchLiveRecommendations, submitLiveRating } from "./src/services/api";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -20,9 +21,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<ResidentUser>(INITIAL_USER);
   const [activeTab, setActiveTab] = useState<MainTab>("home");
   const [selectedService, setSelectedService] = useState<MobileService | null>(null);
-  
-  // Bookmarked services initial state matching Screenshot 142413:
-  // Kibera Health Clinic (srv-002), Soma Tech Hub (srv-003), Youth Mentorship Program (srv-005)
+
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([
     "srv-002",
     "srv-003",
@@ -30,6 +29,29 @@ export default function App() {
   ]);
 
   const [services, setServices] = useState<MobileService[]>(MOCK_SERVICES);
+  const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Load recommendations on mount or when user settlement changes
+  useEffect(() => {
+    loadRecommendations(currentUser.settlement, currentUser.interests);
+  }, [currentUser.settlement]);
+
+  const loadRecommendations = async (
+    settlement: "Kibera" | "Mathare",
+    interests: ServiceCategory[]
+  ) => {
+    setIsLoading(true);
+    try {
+      const res = await fetchLiveRecommendations(settlement, interests, 15);
+      setServices(res.services);
+      setIsLiveApi(res.isLive);
+    } catch {
+      setIsLiveApi(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAuthSuccess = (user: ResidentUser, isNewUser: boolean) => {
     setCurrentUser(user);
@@ -39,16 +61,21 @@ export default function App() {
     } else {
       setIsOnboarded(true);
       setActiveTab("home");
+      loadRecommendations(user.settlement, user.interests);
     }
   };
 
   const handleOnboardingComplete = (selectedInterests: ServiceCategory[]) => {
-    setCurrentUser({
+    const updatedUser = {
       ...currentUser,
       interests: selectedInterests,
-    });
+    };
+    setCurrentUser(updatedUser);
     setIsOnboarded(true);
     setActiveTab("home");
+
+    // Re-query the hybrid ML engine with cold-start interests
+    loadRecommendations(updatedUser.settlement, selectedInterests);
   };
 
   const handleToggleBookmark = (serviceId: string) => {
@@ -59,9 +86,13 @@ export default function App() {
     }
   };
 
-  const handleRateService = (serviceId: string, rating: number) => {
-    setServices(
-      services.map((s) => {
+  const handleRateService = async (serviceId: string, rating: number) => {
+    // 1. Submit to Django Bayesian rating endpoint
+    await submitLiveRating(serviceId, rating, currentUser.id);
+
+    // 2. Update local state
+    setServices((prev) =>
+      prev.map((s) => {
         if (s.id === serviceId) {
           const newReviewCount = s.reviewCount + 1;
           const newRating = (s.rating * s.reviewCount + rating) / newReviewCount;
@@ -107,6 +138,11 @@ export default function App() {
             services={services}
             onSelectService={setSelectedService}
             onSearchPress={() => setActiveTab("search")}
+            isLive={isLiveApi}
+            isLoading={isLoading}
+            onRefresh={() =>
+              loadRecommendations(currentUser.settlement, currentUser.interests)
+            }
           />
         );
         break;

@@ -2,12 +2,12 @@ import React from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   SafeAreaView,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MobileService, ResidentUser } from "../types";
@@ -18,29 +18,27 @@ interface HomeScreenProps {
   services: MobileService[];
   onSelectService: (service: MobileService) => void;
   onSearchPress: () => void;
+  isLive?: boolean;
+  isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = width * 0.42;
+const CARD_WIDTH = width * 0.44;
 
 export function HomeScreen({
   user,
   services,
   onSelectService,
   onSearchPress,
+  isLive = false,
+  isLoading = false,
+  onRefresh,
 }: HomeScreenProps) {
-  // Sort or prioritize services based on user's selected interests (Content-Based recommendation preview)
-  const recommendedServices = [...services].sort((a, b) => {
-    const aMatch = user.interests.includes(a.category) ? 1 : 0;
-    const bMatch = user.interests.includes(b.category) ? 1 : 0;
-    if (bMatch !== aMatch) return bMatch - aMatch;
-    return b.rating - a.rating;
-  });
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Top Search Input Bar matching Screenshot 142340 */}
+        {/* Top Search & System Status Bar */}
         <View style={styles.searchBarWrapper}>
           <TouchableOpacity
             style={styles.searchBar}
@@ -52,21 +50,66 @@ export function HomeScreen({
               Search clinics, legal aid, classes...
             </Text>
           </TouchableOpacity>
+
+          {/* Live Recommendation Engine Status Badge */}
+          <View style={styles.statusRow}>
+            <View
+              style={[
+                styles.statusBadge,
+                isLive ? styles.statusLiveBadge : styles.statusOfflineBadge,
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusDot,
+                  isLive ? styles.statusLiveDot : styles.statusOfflineDot,
+                ]}
+              />
+              <Text
+                style={[
+                  styles.statusText,
+                  isLive ? styles.statusLiveText : styles.statusOfflineText,
+                ]}
+              >
+                {isLive
+                  ? `Hybrid ML Engine (k=2, α=0.2, β=0.4, γ=0.4)`
+                  : `Offline Fixtures Mode`}
+              </Text>
+            </View>
+
+            {onRefresh && (
+              <TouchableOpacity
+                onPress={onRefresh}
+                style={styles.refreshButton}
+                activeOpacity={0.7}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <Ionicons name="refresh" size={14} color="#000000" />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        {/* Map View Component */}
+        {/* OpenStreetMap Interactive View */}
         <MapViewComponent
           services={services}
           onSelectService={onSelectService}
+          settlement={user.settlement}
         />
 
         {/* Recommended for You Carousel */}
         <View style={styles.carouselSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
-            <Text style={styles.sectionSubtitle}>
-              Tailored for {user.settlement} residents
-            </Text>
+            <View>
+              <Text style={styles.sectionTitle}>Recommended for You</Text>
+              <Text style={styles.sectionSubtitle}>
+                Ranked for {user.name} ({user.settlement}) • {user.interests.join(", ")}
+              </Text>
+            </View>
+            <Text style={styles.countBadge}>{services.length} Facilities</Text>
           </View>
 
           <ScrollView
@@ -74,7 +117,7 @@ export function HomeScreen({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.carouselContainer}
           >
-            {recommendedServices.map((item) => (
+            {services.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.card}
@@ -90,6 +133,9 @@ export function HomeScreen({
                     color="#98A2B3"
                     style={styles.cornerIcon}
                   />
+                  <View style={styles.rankBadge}>
+                    <Text style={styles.rankText}>#{index + 1}</Text>
+                  </View>
                 </View>
 
                 {/* Card Text Content */}
@@ -125,13 +171,14 @@ const styles = StyleSheet.create({
   },
   searchBarWrapper: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 10,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#E4E7EC",
     backgroundColor: "#FFFFFF",
   },
   searchBar: {
-    height: 44,
+    height: 42,
     borderWidth: 1.5,
     borderColor: "#000000",
     borderRadius: 2,
@@ -148,25 +195,89 @@ const styles = StyleSheet.create({
     color: "#667085",
     fontWeight: "500",
   },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 2,
+    borderWidth: 1,
+    gap: 5,
+  },
+  statusLiveBadge: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#86EFAC",
+  },
+  statusOfflineBadge: {
+    backgroundColor: "#F9FAFB",
+    borderColor: "#E5E7EB",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusLiveDot: {
+    backgroundColor: "#16A34A",
+  },
+  statusOfflineDot: {
+    backgroundColor: "#9CA3AF",
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  statusLiveText: {
+    color: "#15803D",
+  },
+  statusOfflineText: {
+    color: "#4B5563",
+  },
+  refreshButton: {
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#000000",
+    borderRadius: 2,
+    backgroundColor: "#FFFFFF",
+  },
   carouselSection: {
     flex: 1,
-    paddingTop: 16,
+    paddingTop: 14,
     backgroundColor: "#FFFFFF",
   },
   sectionHeader: {
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "900",
     color: "#000000",
     letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#667085",
     marginTop: 2,
+  },
+  countBadge: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#000000",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: "#F2F4F7",
+    borderWidth: 1,
+    borderColor: "#000000",
   },
   carouselContainer: {
     paddingHorizontal: 16,
@@ -182,7 +293,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   imagePlaceholder: {
-    height: 95,
+    height: 90,
     backgroundColor: "#F2F4F7",
     borderBottomWidth: 1.5,
     borderBottomColor: "#000000",
@@ -202,16 +313,30 @@ const styles = StyleSheet.create({
     top: 6,
     left: 6,
   },
+  rankBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "#000000",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 2,
+  },
+  rankText: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
   cardInfo: {
-    padding: 10,
+    padding: 8,
   },
   cardName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     color: "#000000",
   },
   cardCategory: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#667085",
     marginTop: 2,
     fontWeight: "500",
