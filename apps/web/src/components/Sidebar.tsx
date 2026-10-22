@@ -28,14 +28,23 @@ export function Sidebar({ activeTab, setActiveTab, organization }: SidebarProps)
   ];
 
   return (
-    <aside className="w-64 border-r border-black/15 bg-white min-h-screen flex flex-col justify-between shrink-0 select-none">
+    <aside className="w-64 border-r border-neutral-200/80 bg-white min-h-screen flex flex-col justify-between shrink-0 select-none shadow-[2px_0_12px_rgba(0,0,0,0.02)]">
       <div>
         {/* Brand Header */}
-        <div className="p-6 border-b border-black/10">
-          <h1 className="text-xl font-bold tracking-tight text-black">Huduma Ramani</h1>
-          <p className="text-xs uppercase tracking-wider text-neutral-500 font-semibold mt-0.5">
-            Provider Portal
-          </p>
+        <div className="p-6 border-b border-neutral-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#FFC244] flex items-center justify-center font-black text-sm text-[#1E1E1E] shadow-sm">
+              H
+            </div>
+            <div>
+              <h1 className="text-lg font-black tracking-tight text-[#1E1E1E] flex items-center">
+                Huduma Ramani
+              </h1>
+              <p className="text-[10px] uppercase tracking-wider text-[#00A082] font-extrabold">
+                Provider Portal
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Navigation Links */}
@@ -46,13 +55,13 @@ export function Sidebar({ activeTab, setActiveTab, organization }: SidebarProps)
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold rounded-md transition-colors text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-extrabold rounded-2xl transition-all text-left cursor-pointer ${
                   isActive
-                    ? "bg-neutral-100 text-black border border-black/15 shadow-2xs"
-                    : "text-neutral-700 hover:bg-neutral-50 hover:text-black"
+                    ? "bg-[#FFC244] text-[#1E1E1E] shadow-sm"
+                    : "text-neutral-600 hover:bg-[#FFF9E6] hover:text-[#1E1E1E]"
                 }`}
               >
-                <span className={isActive ? "text-black" : "text-neutral-500"}>{item.icon}</span>
+                <span className={isActive ? "text-[#1E1E1E]" : "text-neutral-500"}>{item.icon}</span>
                 {item.label}
               </button>
             );
@@ -61,13 +70,13 @@ export function Sidebar({ activeTab, setActiveTab, organization }: SidebarProps)
       </div>
 
       {/* Organization Badge Footer */}
-      <div className="p-4 border-t border-black/10">
-        <div className="flex items-center gap-3 p-2.5 rounded-lg border border-black/15 bg-neutral-50">
-          <div className="w-9 h-9 border border-black flex items-center justify-center font-bold text-sm bg-white text-black shrink-0">
+      <div className="p-4 border-t border-neutral-100">
+        <div className="flex items-center gap-3 p-3 rounded-2xl border border-[#FDE68A] bg-[#FFFBEB]">
+          <div className="w-10 h-10 rounded-xl bg-[#FFC244] flex items-center justify-center font-black text-sm text-[#1E1E1E] shrink-0 shadow-xs">
             {organization.shortName}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-black truncate">{organization.name}</p>
+            <p className="text-xs font-bold text-[#1E1E1E] truncate">{organization.name}</p>
             <p className="text-[11px] text-neutral-500 font-mono">ID: {organization.id}</p>
           </div>
         </div>

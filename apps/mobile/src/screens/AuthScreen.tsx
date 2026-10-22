@@ -10,8 +10,10 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { ResidentUser } from "../types";
 import { INITIAL_USER } from "../data/mockServices";
+import { GlovoTheme } from "../theme";
 
 interface AuthScreenProps {
   onAuthSuccess: (user: ResidentUser, isNewUser: boolean) => void;
@@ -45,10 +47,13 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         style={styles.keyboardContainer}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header */}
+          {/* Glovo Yellow Brand Header */}
           <View style={styles.headerContainer}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="map" size={32} color={GlovoTheme.colors.textDark} />
+            </View>
             <Text style={styles.brandTitle}>Huduma Ramani</Text>
-            <Text style={styles.brandSubtitle}>Community Service Directory</Text>
+            <Text style={styles.brandSubtitle}>Informal Settlement Community Directory</Text>
           </View>
 
           {/* Form */}
@@ -62,12 +67,12 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     value={name}
                     onChangeText={setName}
                     placeholder="Enter your name"
-                    placeholderTextColor="#98A2B3"
+                    placeholderTextColor={GlovoTheme.colors.textMuted}
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>INFORMAL SETTLEMENT</Text>
+                  <Text style={styles.inputLabel}>YOUR SETTLEMENT</Text>
                   <View style={styles.settlementToggleRow}>
                     <TouchableOpacity
                       style={[
@@ -75,6 +80,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                         settlement === "Kibera" && styles.selectedSettlementOption,
                       ]}
                       onPress={() => setSettlement("Kibera")}
+                      activeOpacity={0.8}
                     >
                       <Text
                         style={[
@@ -82,7 +88,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                           settlement === "Kibera" && styles.selectedSettlementText,
                         ]}
                       >
-                        Kibera
+                        📍 Kibera
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -91,6 +97,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                         settlement === "Mathare" && styles.selectedSettlementOption,
                       ]}
                       onPress={() => setSettlement("Mathare")}
+                      activeOpacity={0.8}
                     >
                       <Text
                         style={[
@@ -98,7 +105,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                           settlement === "Mathare" && styles.selectedSettlementText,
                         ]}
                       >
-                        Mathare
+                        📍 Mathare
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -113,7 +120,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="Enter your email"
-                placeholderTextColor="#98A2B3"
+                placeholderTextColor={GlovoTheme.colors.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -126,19 +133,19 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="••••••••"
-                placeholderTextColor="#98A2B3"
+                placeholderTextColor={GlovoTheme.colors.textMuted}
                 secureTextEntry
               />
             </View>
 
-            {/* Primary Submit Button */}
+            {/* Primary Submit Button (Glovo Yellow) */}
             <TouchableOpacity
               style={styles.submitButton}
               onPress={handleSubmit}
               activeOpacity={0.85}
             >
               <Text style={styles.submitButtonText}>
-                {isSignUp ? "Sign Up" : "Log In"}
+                {isSignUp ? "Create Resident Account" : "Log In to Directory"}
               </Text>
             </TouchableOpacity>
 
@@ -151,7 +158,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               <Text style={styles.switchModeText}>
                 {isSignUp
                   ? "Already have an account? Log In"
-                  : "Don't have an account? Sign Up"}
+                  : "New resident? Create an Account"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -164,7 +171,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   keyboardContainer: {
     flex: 1,
@@ -172,98 +179,111 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 40,
+    paddingHorizontal: 24,
+    paddingVertical: 36,
   },
   headerContainer: {
     alignItems: "center",
-    marginBottom: 44,
+    marginBottom: 36,
+  },
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+    ...GlovoTheme.shadows.glowYellow,
   },
   brandTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "900",
-    color: "#000000",
-    letterSpacing: -0.5,
+    color: GlovoTheme.colors.textDark,
+    letterSpacing: -0.4,
     textAlign: "center",
   },
   brandSubtitle: {
-    fontSize: 14,
-    color: "#667085",
-    marginTop: 6,
+    fontSize: 13,
+    color: GlovoTheme.colors.textSecondary,
+    marginTop: 4,
     textAlign: "center",
+    fontWeight: "500",
   },
   formContainer: {
     width: "100%",
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
-    color: "#000000",
-    marginBottom: 8,
+    color: GlovoTheme.colors.textDark,
+    marginBottom: 6,
     letterSpacing: 0.5,
   },
   input: {
-    height: 48,
+    height: 50,
     borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    paddingHorizontal: 14,
+    borderColor: GlovoTheme.colors.border,
+    borderRadius: GlovoTheme.borderRadius.md,
+    paddingHorizontal: 16,
     fontSize: 14,
-    color: "#000000",
-    backgroundColor: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
+    backgroundColor: GlovoTheme.colors.background,
+    fontWeight: "600",
   },
   settlementToggleRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
   },
   settlementOption: {
     flex: 1,
-    height: 42,
+    height: 44,
+    borderRadius: GlovoTheme.borderRadius.pill,
     borderWidth: 1.5,
-    borderColor: "#000000",
+    borderColor: GlovoTheme.colors.border,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: GlovoTheme.colors.background,
   },
   selectedSettlementOption: {
-    backgroundColor: "#000000",
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    borderColor: GlovoTheme.colors.primary,
   },
   settlementText: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#000000",
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   selectedSettlementText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
   },
   submitButton: {
-    height: 50,
-    backgroundColor: "#000000",
-    borderWidth: 1.5,
-    borderColor: "#000000",
+    height: 52,
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    borderRadius: GlovoTheme.borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
-    borderRadius: 2,
+    marginTop: 18,
+    ...GlovoTheme.shadows.glowYellow,
   },
   submitButtonText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
     fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+    fontWeight: "900",
+    letterSpacing: -0.2,
   },
   switchModeButton: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 22,
+    marginTop: 20,
     paddingVertical: 8,
   },
   switchModeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#000000",
-    textDecorationLine: "underline",
+    color: "#78350F", // Warm amber brown
   },
 });

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MobileService } from "../types";
+import { GlovoTheme } from "../theme";
 
 interface SavedScreenProps {
   savedServices: MobileService[];
@@ -24,11 +25,14 @@ export function SavedScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header Title matching Screenshot 142413 */}
+        {/* Header Title */}
         <View style={styles.header}>
-          <Text style={styles.title}>Saved Services</Text>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>SAVED DIRECTORY</Text>
+          </View>
+          <Text style={styles.title}>Bookmarked Services</Text>
           <Text style={styles.subtitle}>
-            {savedServices.length} {savedServices.length === 1 ? "listing" : "listings"} bookmarked for offline access
+            {savedServices.length} {savedServices.length === 1 ? "facility" : "facilities"} saved for offline reference
           </Text>
         </View>
 
@@ -41,16 +45,14 @@ export function SavedScreen({
             <TouchableOpacity
               style={styles.card}
               onPress={() => onSelectService(item)}
-              activeOpacity={0.75}
+              activeOpacity={0.8}
             >
-              {/* Left Thumbnail with diagonal wireframe line */}
+              {/* Left Thumbnail */}
               <View style={styles.thumbnail}>
-                <View style={styles.diagonalLine} />
                 <Ionicons
-                  name="image-outline"
-                  size={16}
-                  color="#98A2B3"
-                  style={styles.cornerIcon}
+                  name="business"
+                  size={24}
+                  color={GlovoTheme.colors.primaryHover}
                 />
               </View>
 
@@ -60,26 +62,32 @@ export function SavedScreen({
                   {item.name}
                 </Text>
                 <Text style={styles.categoryName} numberOfLines={1}>
-                  {item.category}
+                  {item.category} • {item.distanceKm} km away
                 </Text>
+                <View style={styles.starRow}>
+                  <Ionicons name="star" size={11} color={GlovoTheme.colors.star} />
+                  <Text style={styles.starText}>{item.rating.toFixed(1)}</Text>
+                </View>
               </View>
 
-              {/* Right Ribbon / Bookmark Icon */}
+              {/* Right Ribbon / Bookmark Icon (Glovo Yellow) */}
               <TouchableOpacity
                 style={styles.bookmarkButton}
                 onPress={() => onRemoveBookmark(item.id)}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
-                <Ionicons name="bookmark" size={20} color="#000000" />
+                <Ionicons name="bookmark" size={20} color={GlovoTheme.colors.primaryHover} />
               </TouchableOpacity>
             </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="bookmark-outline" size={48} color="#D0D5DD" style={{ marginBottom: 12 }} />
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="bookmark-outline" size={36} color={GlovoTheme.colors.primary} />
+              </View>
               <Text style={styles.emptyTitle}>No saved services yet</Text>
               <Text style={styles.emptySubtext}>
-                Tap the bookmark icon on any clinic, workshop, or legal clinic to save it here for offline reference.
+                Tap the bookmark icon on any clinic, school, or legal desk to save it here for offline reference.
               </Text>
             </View>
           }
@@ -92,68 +100,68 @@ export function SavedScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F4F7",
+    borderBottomColor: GlovoTheme.colors.borderLight,
+  },
+  headerBadge: {
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    alignSelf: "flex-start",
+    marginBottom: 6,
+  },
+  headerBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#78350F",
+    letterSpacing: 0.5,
   },
   title: {
     fontSize: 22,
     fontWeight: "900",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     letterSpacing: -0.4,
   },
   subtitle: {
     fontSize: 12,
-    color: "#667085",
+    color: GlovoTheme.colors.textSecondary,
     marginTop: 2,
+    fontWeight: "500",
   },
   listContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 10,
   },
   card: {
     flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+    borderRadius: GlovoTheme.borderRadius.md,
+    backgroundColor: GlovoTheme.colors.white,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.border,
     padding: 12,
     gap: 12,
+    alignItems: "center",
+    ...GlovoTheme.shadows.soft,
   },
   thumbnail: {
-    width: 60,
-    height: 60,
-    borderWidth: 1,
-    borderColor: "#000000",
-    backgroundColor: "#F2F4F7",
-    position: "relative",
-    overflow: "hidden",
+    width: 56,
+    height: 56,
+    borderRadius: GlovoTheme.borderRadius.sm,
+    backgroundColor: GlovoTheme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-  },
-  diagonalLine: {
-    position: "absolute",
-    width: "140%",
-    height: 1,
-    backgroundColor: "#D0D5DD",
-    transform: [{ rotate: "35deg" }],
-  },
-  cornerIcon: {
-    position: "absolute",
-    top: 4,
-    left: 4,
   },
   cardInfo: {
     flex: 1,
@@ -162,31 +170,53 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#000000",
-    marginBottom: 4,
+    color: GlovoTheme.colors.textDark,
   },
   categoryName: {
-    fontSize: 12,
-    color: "#667085",
+    fontSize: 11,
+    color: GlovoTheme.colors.textSecondary,
+    marginTop: 2,
     fontWeight: "500",
+  },
+  starRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  starText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#92400E",
   },
   bookmarkButton: {
     padding: 6,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.background,
   },
   emptyContainer: {
-    paddingVertical: 80,
+    paddingVertical: 60,
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 30,
+  },
+  emptyIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     marginBottom: 6,
   },
   emptySubtext: {
-    fontSize: 13,
-    color: "#667085",
+    fontSize: 12,
+    color: GlovoTheme.colors.textSecondary,
     textAlign: "center",
     lineHeight: 18,
   },

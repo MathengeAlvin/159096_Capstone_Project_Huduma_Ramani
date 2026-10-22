@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ServiceListing, ServiceCategory, ListingStatus } from "../types";
+import { X } from "lucide-react";
 
 interface ListingModalProps {
   isOpen: boolean;
@@ -92,68 +93,68 @@ export function ListingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white border-2 border-black w-full max-w-xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-4 border-b border-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl border border-neutral-200/80 w-full max-w-xl p-7 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-4 border-b border-neutral-100">
           <div>
-            <h3 className="text-xl font-bold text-black tracking-tight">
-              {initialData ? "Edit Service Listing" : "Add New Community Service"}
+            <h3 className="text-xl font-black text-[#1E1E1E] tracking-tight">
+              {initialData ? "Edit Service Listing" : "Add Community Service"}
             </h3>
             <p className="text-xs text-neutral-500 mt-0.5">
-              Publish or update details for residents in informal settlements
+              Publish or update details for residents across Kibera & Mathare
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-neutral-500 hover:text-black font-bold text-xl px-2 cursor-pointer"
+            className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-500 hover:text-black hover:bg-neutral-100 transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4 text-sm">
-          {/* Service Name */}
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          {/* Name */}
           <div>
-            <label className="block text-xs font-bold uppercase text-black mb-1">
-              Service Name *
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+              Service / Center Name *
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Kibera Community Health Center"
-              className="w-full px-3 py-2 border border-black focus:outline-hidden focus:ring-1 focus:ring-black text-sm"
+              placeholder="e.g. Kibera Community Health Clinic"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
             />
           </div>
 
           {/* Category & Settlement */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-black mb-1">
-                Category *
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ServiceCategory)}
-                className="w-full px-3 py-2 border border-black bg-white focus:outline-hidden text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-sm text-[#1E1E1E]"
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-black mb-1">
-                Settlement Region *
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Settlement
               </label>
               <select
                 value={settlement}
                 onChange={(e) => setSettlement(e.target.value as "Kibera" | "Mathare")}
-                className="w-full px-3 py-2 border border-black bg-white focus:outline-hidden text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-sm text-[#1E1E1E]"
               >
                 <option value="Kibera">Kibera</option>
                 <option value="Mathare">Mathare</option>
@@ -161,71 +162,80 @@ export function ListingModal({
             </div>
           </div>
 
-          {/* Location Landmark & Status */}
+          {/* Specific Landmark Location */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+              Specific Landmark Location *
+            </label>
+            <input
+              type="text"
+              required
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Olympic Stage, Near DC Grounds"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
+            />
+          </div>
+
+          {/* Lat / Lng Coordinates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-black mb-1">
-                Location / Landmark *
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Latitude (OpenStreetMap)
               </label>
               <input
                 type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Kibera Sector 4, Olympic"
-                className="w-full px-3 py-2 border border-black focus:outline-hidden text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-black mb-1">
-                Status *
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ListingStatus)}
-                className="w-full px-3 py-2 border border-black bg-white focus:outline-hidden text-sm font-semibold"
-              >
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="PENDING">PENDING</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Coordinates (Lat / Lng) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
-                Latitude (GPS)
-              </label>
-              <input
-                type="number"
-                step="any"
                 value={lat}
                 onChange={(e) => setLat(e.target.value)}
                 placeholder="-1.3142"
-                className="w-full px-3 py-2 border border-neutral-400 focus:outline-hidden text-sm font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none font-mono text-xs text-[#1E1E1E]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
-                Longitude (GPS)
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Longitude (OpenStreetMap)
               </label>
               <input
-                type="number"
-                step="any"
+                type="text"
                 value={lng}
                 onChange={(e) => setLng(e.target.value)}
                 placeholder="36.7865"
-                className="w-full px-3 py-2 border border-neutral-400 focus:outline-hidden text-sm font-mono"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none font-mono text-xs text-[#1E1E1E]"
+              />
+            </div>
+          </div>
+
+          {/* Contact Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Contact Phone
+              </label>
+              <input
+                type="text"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+254 7..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
+                Contact Email
+              </label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="info@provider.org"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
               />
             </div>
           </div>
 
           {/* Operating Hours */}
           <div>
-            <label className="block text-xs font-bold uppercase text-black mb-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
               Operating Hours
             </label>
             <input
@@ -233,13 +243,13 @@ export function ListingModal({
               value={operatingHours}
               onChange={(e) => setOperatingHours(e.target.value)}
               placeholder="e.g. Mon - Fri, 8:00 AM - 4:00 PM"
-              className="w-full px-3 py-2 border border-black focus:outline-hidden text-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-bold uppercase text-black mb-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
               Description (Used for TF-IDF Keyword Matching)
             </label>
             <textarea
@@ -247,22 +257,22 @@ export function ListingModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Provide descriptive services offered (e.g. healthcare, legal aid, scholarship funding)..."
-              className="w-full px-3 py-2 border border-black focus:outline-hidden text-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-black flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-neutral-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-black text-xs font-bold uppercase text-black hover:bg-neutral-100 transition-colors"
+              className="px-5 py-2.5 rounded-full border border-neutral-300 text-xs font-bold uppercase text-neutral-700 hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 border border-black bg-black text-white text-xs font-bold uppercase hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-[#FFC244] hover:bg-[#F5B42E] text-[#1E1E1E] text-xs font-black uppercase tracking-wider transition-all shadow-sm cursor-pointer"
             >
               {initialData ? "Save Changes" : "Create Listing"}
             </button>

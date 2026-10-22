@@ -11,6 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { MobileService, ServiceCategory } from "../types";
 import { ALL_CATEGORIES } from "../data/mockServices";
+import { GlovoTheme } from "../theme";
 
 interface SearchScreenProps {
   services: MobileService[];
@@ -21,14 +22,14 @@ interface SearchScreenProps {
 export function SearchScreen({
   services,
   onSelectService,
-  initialQuery = "Legal Aid",
+  initialQuery = "",
 }: SearchScreenProps) {
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const filtered = services.filter((s) => {
     const matchesCategory =
-      selectedCategory === "All" || s.category === selectedCategory;
+      selectedCategory === "All" || s.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesQuery =
       s.name.toLowerCase().includes(query.toLowerCase()) ||
       s.category.toLowerCase().includes(query.toLowerCase()) ||
@@ -40,21 +41,21 @@ export function SearchScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Top Active Search Bar matching Screenshot 142351 */}
+        {/* Top Search Bar (Glovo Pill) */}
         <View style={styles.searchHeader}>
           <View style={styles.searchInputWrapper}>
-            <Ionicons name="search" size={18} color="#000000" style={styles.searchIcon} />
+            <Ionicons name="search" size={18} color={GlovoTheme.colors.textDark} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search clinics, legal aid, classes..."
-              placeholderTextColor="#98A2B3"
+              placeholder="Search clinics, schools, legal kiosks..."
+              placeholderTextColor={GlovoTheme.colors.textMuted}
               autoFocus={false}
             />
             {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery("")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close-circle" size={16} color="#98A2B3" />
+                <Ionicons name="close-circle" size={18} color={GlovoTheme.colors.textMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -77,7 +78,7 @@ export function SearchScreen({
                     isSelected && styles.selectedChip,
                   ]}
                   onPress={() => setSelectedCategory(item)}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
                   <Text
                     style={[
@@ -93,14 +94,14 @@ export function SearchScreen({
           />
         </View>
 
-        {/* Subtitle count matching wireframe */}
+        {/* Results Count Banner */}
         <View style={styles.resultsCountBar}>
           <Text style={styles.resultsCountText}>
-            Showing {filtered.length} results for &quot;{query || selectedCategory}&quot; in Kibera
+            Showing <Text style={styles.boldCount}>{filtered.length}</Text> facilities {query ? `for "${query}"` : `in ${selectedCategory}`}
           </Text>
         </View>
 
-        {/* List of Service Cards matching Screenshot 142351 */}
+        {/* List of Service Cards */}
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
@@ -109,16 +110,14 @@ export function SearchScreen({
             <TouchableOpacity
               style={styles.card}
               onPress={() => onSelectService(item)}
-              activeOpacity={0.75}
+              activeOpacity={0.8}
             >
-              {/* Left Thumbnail placeholder with diagonal line */}
+              {/* Left Thumbnail in Glovo Warm Tone */}
               <View style={styles.cardThumbnail}>
-                <View style={styles.diagonalLine} />
                 <Ionicons
-                  name="image-outline"
-                  size={16}
-                  color="#98A2B3"
-                  style={styles.cornerIcon}
+                  name="business"
+                  size={24}
+                  color={GlovoTheme.colors.primaryHover}
                 />
               </View>
 
@@ -128,18 +127,24 @@ export function SearchScreen({
                   {item.name}
                 </Text>
                 <Text style={styles.categoryDistanceRow}>
-                  {item.category} • {item.distanceKm} km
+                  {item.category} • {item.distanceKm} km away
                 </Text>
                 <View style={styles.ratingRow}>
-                  <Text style={styles.ratingText}>★ {item.rating.toFixed(1)}</Text>
+                  <View style={styles.starBadge}>
+                    <Ionicons name="star" size={11} color={GlovoTheme.colors.star} />
+                    <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+                  </View>
                   <Text style={styles.reviewCount}>({item.reviewCount} reviews)</Text>
+                  <Text style={styles.settlementTag}>• {item.settlement}</Text>
                 </View>
               </View>
             </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No services found matching your query.</Text>
+              <Ionicons name="search-outline" size={40} color={GlovoTheme.colors.primary} />
+              <Text style={styles.emptyTitle}>No facilities found</Text>
+              <Text style={styles.emptyText}>Try searching for another keyword or category.</Text>
             </View>
           }
         />
@@ -151,26 +156,28 @@ export function SearchScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   searchHeader: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
+    backgroundColor: GlovoTheme.colors.white,
   },
   searchInputWrapper: {
-    height: 44,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
+    height: 46,
+    borderRadius: GlovoTheme.borderRadius.pill,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    backgroundColor: GlovoTheme.colors.background,
+    borderWidth: 1.5,
+    borderColor: GlovoTheme.colors.borderYellow,
+    ...GlovoTheme.shadows.soft,
   },
   searchIcon: {
     marginRight: 8,
@@ -178,37 +185,39 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     fontWeight: "600",
   },
   categoryScrollContainer: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F4F7",
+    borderBottomColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.white,
   },
   categoryChipsList: {
     paddingHorizontal: 16,
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "#D0D5DD",
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    borderColor: GlovoTheme.colors.border,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.background,
   },
   selectedChip: {
-    backgroundColor: "#000000",
-    borderColor: "#000000",
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    borderColor: GlovoTheme.colors.primary,
   },
   chipText: {
     fontSize: 11,
-    fontWeight: "600",
-    color: "#475467",
+    fontWeight: "700",
+    color: GlovoTheme.colors.textSecondary,
   },
   selectedChipText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
+    fontWeight: "900",
   },
   resultsCountBar: {
     paddingHorizontal: 16,
@@ -216,47 +225,36 @@ const styles = StyleSheet.create({
   },
   resultsCountText: {
     fontSize: 12,
-    color: "#667085",
+    color: GlovoTheme.colors.textSecondary,
     fontWeight: "500",
+  },
+  boldCount: {
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   listContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
-    gap: 12,
+    gap: 10,
   },
   card: {
     flexDirection: "row",
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
-    overflow: "hidden",
-    padding: 10,
+    borderRadius: GlovoTheme.borderRadius.md,
+    backgroundColor: GlovoTheme.colors.white,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.border,
+    padding: 12,
     gap: 12,
     alignItems: "center",
+    ...GlovoTheme.shadows.soft,
   },
   cardThumbnail: {
-    width: 68,
-    height: 68,
-    borderWidth: 1,
-    borderColor: "#000000",
-    backgroundColor: "#F2F4F7",
-    position: "relative",
-    overflow: "hidden",
+    width: 60,
+    height: 60,
+    borderRadius: GlovoTheme.borderRadius.sm,
+    backgroundColor: GlovoTheme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
-  },
-  diagonalLine: {
-    position: "absolute",
-    width: "140%",
-    height: 1,
-    backgroundColor: "#D0D5DD",
-    transform: [{ rotate: "35deg" }],
-  },
-  cornerIcon: {
-    position: "absolute",
-    top: 4,
-    left: 4,
   },
   cardDetails: {
     flex: 1,
@@ -265,35 +263,57 @@ const styles = StyleSheet.create({
   serviceName: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#000000",
-    marginBottom: 3,
+    color: GlovoTheme.colors.textDark,
+    marginBottom: 2,
   },
   categoryDistanceRow: {
     fontSize: 11,
-    color: "#667085",
-    fontWeight: "500",
+    color: GlovoTheme.colors.textSecondary,
+    fontWeight: "600",
   },
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 5,
     gap: 6,
   },
+  starBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: GlovoTheme.borderRadius.xs,
+    gap: 3,
+  },
   ratingText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
-    color: "#000000",
+    color: "#92400E",
   },
   reviewCount: {
     fontSize: 10,
-    color: "#98A2B3",
+    color: GlovoTheme.colors.textMuted,
+    fontWeight: "500",
+  },
+  settlementTag: {
+    fontSize: 10,
+    color: GlovoTheme.colors.textMuted,
+    fontWeight: "600",
   },
   emptyContainer: {
-    paddingVertical: 40,
+    paddingVertical: 48,
     alignItems: "center",
+    gap: 6,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
+    marginTop: 8,
   },
   emptyText: {
-    fontSize: 13,
-    color: "#667085",
+    fontSize: 12,
+    color: GlovoTheme.colors.textSecondary,
   },
 });

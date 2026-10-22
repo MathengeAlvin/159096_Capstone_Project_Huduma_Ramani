@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import { MobileService } from "../types";
+import { GlovoTheme } from "../theme";
 
 interface ServiceDetailScreenProps {
   service: MobileService;
@@ -66,31 +67,31 @@ export function ServiceDetailScreen({
             padding: 0;
             width: 100%;
             height: 100%;
-            background: #e5e7eb;
+            background: #fffdf5;
           }
           .location-pin {
-            background-color: #dc2626;
-            color: #ffffff;
+            background-color: #ffc244;
+            color: #1e1e1e;
             border-radius: 50%;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 900;
-            border: 2.5px solid #ffffff;
-            box-shadow: 0 0 10px rgba(220, 38, 38, 0.7), 0 3px 6px rgba(0,0,0,0.35);
+            border: 3px solid #1e1e1e;
+            box-shadow: 0 0 12px rgba(255, 194, 68, 0.8), 0 3px 6px rgba(0,0,0,0.3);
           }
           .leaflet-popup-content-wrapper {
-            border-radius: 4px;
-            border: 1.5px solid #111827;
+            border-radius: 8px;
+            border: 1.5px solid #ffc244;
             padding: 2px;
           }
           .popup-title {
             font-size: 12px;
             font-weight: 900;
-            color: #111827;
+            color: #1e1e1e;
             margin: 0;
           }
           .popup-sub {
@@ -101,12 +102,12 @@ export function ServiceDetailScreen({
             position: absolute;
             bottom: 3px;
             left: 3px;
-            background: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.9);
             font-size: 8px;
-            font-weight: 700;
+            font-weight: 800;
             color: #374151;
-            padding: 1px 4px;
-            border-radius: 2px;
+            padding: 2px 5px;
+            border-radius: 3px;
             z-index: 1000;
           }
         </style>
@@ -118,7 +119,7 @@ export function ServiceDetailScreen({
           const map = L.map('mini-map', {
             center: [${lat}, ${lon}],
             zoom: 16,
-            zoomControl: true,
+            zoomControl: false,
             dragging: true,
             touchZoom: true,
             scrollWheelZoom: true,
@@ -132,8 +133,8 @@ export function ServiceDetailScreen({
           const icon = L.divIcon({
             className: 'pin-box',
             html: '<div class="location-pin">📍</div>',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
           });
 
           const marker = L.marker([${lat}, ${lon}], { icon }).addTo(map);
@@ -150,60 +151,76 @@ export function ServiceDetailScreen({
         {/* Top Header with Back Button */}
         <View style={styles.topHeader}>
           <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="arrow-back" size={24} color="#000000" />
+            <Ionicons name="arrow-back" size={22} color={GlovoTheme.colors.textDark} />
           </TouchableOpacity>
-          <Text style={styles.headerCategoryBadge}>{service.category}</Text>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.headerCategoryText}>{service.category}</Text>
+          </View>
           <TouchableOpacity
             onPress={() => onToggleBookmark(service.id)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.bookmarkHeaderBtn}
           >
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={22}
-              color="#000000"
+              size={20}
+              color={isBookmarked ? GlovoTheme.colors.primaryHover : GlovoTheme.colors.textDark}
             />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Title & Subtitle matching Screenshot 142402 */}
+          {/* Title & Subtitle */}
           <Text style={styles.title}>{service.name}</Text>
-          <Text style={styles.subtitle}>
-            {service.category.toUpperCase()} • ★ {service.rating.toFixed(1)} ({service.reviewCount} reviews)
-          </Text>
+          <View style={styles.subtitleRow}>
+            <View style={styles.starBadge}>
+              <Ionicons name="star" size={13} color={GlovoTheme.colors.star} />
+              <Text style={styles.starBadgeText}>{service.rating.toFixed(1)}</Text>
+            </View>
+            <Text style={styles.reviewCountText}>({service.reviewCount} verified reviews)</Text>
+            <Text style={styles.settlementTag}>• {service.settlement}</Text>
+          </View>
 
-          {/* Hero Image Placeholder with diagonal wireframe cross */}
-          <View style={styles.heroImagePlaceholder}>
-            <View style={styles.diagonalLine} />
-            <Ionicons name="image-outline" size={28} color="#98A2B3" style={styles.heroCornerIcon} />
-            <Text style={styles.placeholderLabel}>{service.name} Photo</Text>
+          {/* Hero Banner with Glovo Yellow Accents */}
+          <View style={styles.heroBanner}>
+            <View style={styles.heroIconCircle}>
+              <Ionicons name="business" size={36} color={GlovoTheme.colors.textDark} />
+            </View>
+            <Text style={styles.heroBannerLabel}>{service.name}</Text>
+            <Text style={styles.heroBannerSub}>{service.location} Community Hub</Text>
           </View>
 
           {/* About Service Section */}
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionHeading}>ABOUT SERVICE</Text>
+            <Text style={styles.sectionHeading}>ABOUT THIS SERVICE</Text>
             <Text style={styles.descriptionText}>{service.description}</Text>
 
             {/* Metadata Rows */}
             <View style={styles.metaInfoBox}>
               <View style={styles.metaRow}>
-                <Ionicons name="location-outline" size={16} color="#000000" style={styles.metaIcon} />
+                <View style={styles.metaIconBox}>
+                  <Ionicons name="location" size={15} color={GlovoTheme.colors.textDark} />
+                </View>
                 <Text style={styles.metaText}>
-                  <Text style={styles.metaBold}>Address:</Text> {service.address}
+                  <Text style={styles.metaBold}>Address: </Text>{service.address}
                 </Text>
               </View>
 
               <View style={styles.metaRow}>
-                <Ionicons name="time-outline" size={16} color="#000000" style={styles.metaIcon} />
+                <View style={styles.metaIconBox}>
+                  <Ionicons name="time" size={15} color={GlovoTheme.colors.textDark} />
+                </View>
                 <Text style={styles.metaText}>
-                  <Text style={styles.metaBold}>Hours:</Text> {service.hours}
+                  <Text style={styles.metaBold}>Hours: </Text>{service.hours}
                 </Text>
               </View>
 
               <View style={styles.metaRow}>
-                <Ionicons name="call-outline" size={16} color="#000000" style={styles.metaIcon} />
+                <View style={styles.metaIconBox}>
+                  <Ionicons name="call" size={15} color={GlovoTheme.colors.textDark} />
+                </View>
                 <Text style={styles.metaText}>
-                  <Text style={styles.metaBold}>Contact:</Text> {service.phone}
+                  <Text style={styles.metaBold}>Contact: </Text>{service.phone}
                 </Text>
               </View>
             </View>
@@ -213,10 +230,12 @@ export function ServiceDetailScreen({
           <View style={styles.mapSnippetBox}>
             <View style={styles.mapSnippetHeader}>
               <View style={styles.snippetHeadingRow}>
-                <Ionicons name="map" size={13} color="#000000" />
+                <Ionicons name="map" size={15} color={GlovoTheme.colors.textDark} />
                 <Text style={styles.mapSnippetText}>LOCATION ON OPENSTREETMAP</Text>
               </View>
-              <Text style={styles.snippetBadge}>{service.distanceKm} km away</Text>
+              <View style={styles.snippetDistancePill}>
+                <Text style={styles.snippetBadge}>{service.distanceKm} km away</Text>
+              </View>
             </View>
 
             <View style={styles.snippetMapSurface}>
@@ -243,15 +262,17 @@ export function ServiceDetailScreen({
             </View>
 
             <View style={styles.snippetFooter}>
+              <Ionicons name="navigate-circle" size={14} color={GlovoTheme.colors.secondary} />
               <Text style={styles.mapSubtext}>
-                📍 {service.location || service.settlement} • Lat: {service.coordinates.latitude.toFixed(4)}, Lon: {service.coordinates.longitude.toFixed(4)}
+                {service.location || service.settlement} • Lat: {service.coordinates.latitude.toFixed(4)}, Lon: {service.coordinates.longitude.toFixed(4)}
               </Text>
             </View>
           </View>
 
-          {/* Rate This Service Panel matching Screenshot 142402 */}
+          {/* Rate This Service Panel */}
           <View style={styles.ratingPanel}>
             <Text style={styles.ratingPanelTitle}>Rate this service</Text>
+            <Text style={styles.ratingPanelSub}>Your rating informs the Bayesian recommendation engine</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((star) => {
                 const filled = star <= userRating;
@@ -264,8 +285,8 @@ export function ServiceDetailScreen({
                   >
                     <Ionicons
                       name={filled ? "star" : "star-outline"}
-                      size={28}
-                      color={filled ? "#F59E0B" : "#000000"}
+                      size={32}
+                      color={filled ? GlovoTheme.colors.primary : "#D1D5DB"}
                       style={styles.starIcon}
                     />
                   </TouchableOpacity>
@@ -273,14 +294,17 @@ export function ServiceDetailScreen({
               })}
             </View>
             {hasRated && (
-              <Text style={styles.ratingConfirmation}>
-                Thank you! Your rating helps the Bayesian quality engine rank trusted community providers.
-              </Text>
+              <View style={styles.ratingConfirmationBox}>
+                <Ionicons name="checkmark-circle" size={16} color={GlovoTheme.colors.secondary} />
+                <Text style={styles.ratingConfirmation}>
+                  Thank you! Your feedback adjusts quality rankings in {service.settlement}.
+                </Text>
+              </View>
             )}
           </View>
         </ScrollView>
 
-        {/* Bottom Actions Row matching Screenshot 142402 */}
+        {/* Bottom Actions Row with Glovo Yellow Primary Button */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={[styles.bookmarkButton, isBookmarked && styles.bookmarkedActiveButton]}
@@ -290,27 +314,22 @@ export function ServiceDetailScreen({
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
               size={18}
-              color={isBookmarked ? "#FFFFFF" : "#000000"}
+              color={GlovoTheme.colors.textDark}
               style={{ marginRight: 6 }}
             />
-            <Text
-              style={[
-                styles.bookmarkButtonText,
-                isBookmarked && styles.bookmarkedActiveText,
-              ]}
-            >
-              {isBookmarked ? "Bookmarked" : "Bookmark"}
+            <Text style={styles.bookmarkButtonText}>
+              {isBookmarked ? "Saved" : "Save"}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.applyButton, applied && styles.appliedButton]}
             onPress={handleApply}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             disabled={applied}
           >
             <Text style={styles.applyButtonText}>
-              {applied ? "Application Sent ✓" : "Apply / Contact"}
+              {applied ? "Request Sent ✓" : "Request Service / Contact"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -322,11 +341,11 @@ export function ServiceDetailScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   topHeader: {
     flexDirection: "row",
@@ -335,17 +354,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F4F7",
+    borderBottomColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.white,
   },
   backButton: {
-    padding: 4,
+    padding: 6,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.background,
   },
-  headerCategoryBadge: {
-    fontSize: 12,
-    fontWeight: "800",
+  categoryBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    borderRadius: GlovoTheme.borderRadius.pill,
+  },
+  headerCategoryText: {
+    fontSize: 11,
+    fontWeight: "900",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    color: "#475467",
+    color: "#78350F",
+  },
+  bookmarkHeaderBtn: {
+    padding: 6,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -355,64 +388,92 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "900",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     letterSpacing: -0.4,
   },
-  subtitle: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475467",
-    marginTop: 4,
+  subtitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
     marginBottom: 16,
+    gap: 6,
   },
-  heroImagePlaceholder: {
-    height: 180,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    backgroundColor: "#F2F4F7",
-    position: "relative",
+  starBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: GlovoTheme.borderRadius.xs,
+    gap: 3,
+  },
+  starBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#92400E",
+  },
+  reviewCountText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: GlovoTheme.colors.textSecondary,
+  },
+  settlementTag: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: GlovoTheme.colors.textMuted,
+  },
+  heroBanner: {
+    height: 140,
+    borderRadius: GlovoTheme.borderRadius.lg,
+    backgroundColor: GlovoTheme.colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
-    overflow: "hidden",
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderYellow,
+    ...GlovoTheme.shadows.soft,
   },
-  diagonalLine: {
-    position: "absolute",
-    width: "150%",
-    height: 1,
-    backgroundColor: "#D0D5DD",
-    transform: [{ rotate: "25deg" }],
+  heroIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: GlovoTheme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+    ...GlovoTheme.shadows.soft,
   },
-  heroCornerIcon: {
-    position: "absolute",
-    top: 10,
-    left: 10,
+  heroBannerLabel: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
   },
-  placeholderLabel: {
-    fontSize: 12,
-    color: "#667085",
-    fontWeight: "600",
+  heroBannerSub: {
+    fontSize: 11,
+    color: "#78350F",
+    fontWeight: "700",
   },
   sectionContainer: {
     marginBottom: 20,
   },
   sectionHeading: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "900",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   descriptionText: {
     fontSize: 13,
     lineHeight: 20,
-    color: "#344054",
+    color: GlovoTheme.colors.textSecondary,
     marginBottom: 14,
   },
   metaInfoBox: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: GlovoTheme.colors.background,
+    borderRadius: GlovoTheme.borderRadius.md,
     borderWidth: 1,
-    borderColor: "#EAECF0",
+    borderColor: GlovoTheme.colors.border,
     padding: 12,
     gap: 10,
   },
@@ -420,33 +481,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  metaIcon: {
-    marginRight: 8,
+  metaIconBox: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
   },
   metaText: {
     fontSize: 12,
-    color: "#344054",
+    color: GlovoTheme.colors.textDark,
+    flex: 1,
   },
   metaBold: {
-    fontWeight: "700",
-    color: "#000000",
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   mapSnippetBox: {
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    backgroundColor: "#FFFFFF",
+    borderRadius: GlovoTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderYellow,
+    backgroundColor: GlovoTheme.colors.white,
     marginBottom: 20,
     overflow: "hidden",
+    ...GlovoTheme.shadows.soft,
   },
   mapSnippetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderBottomColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.primaryLight,
   },
   snippetHeadingRow: {
     flexDirection: "row",
@@ -456,109 +526,130 @@ const styles = StyleSheet.create({
   mapSnippetText: {
     fontSize: 11,
     fontWeight: "900",
-    color: "#000000",
+    color: "#78350F",
     letterSpacing: 0.5,
+  },
+  snippetDistancePill: {
+    backgroundColor: GlovoTheme.colors.white,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: GlovoTheme.borderRadius.pill,
   },
   snippetBadge: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#1E40AF",
-    backgroundColor: "#DBEAFE",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 2,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
   },
   snippetMapSurface: {
     height: 180,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FFFDF7",
   },
   snippetWebView: {
     flex: 1,
   },
   snippetFooter: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: GlovoTheme.colors.borderLight,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   mapSubtext: {
     fontSize: 11,
-    color: "#4B5563",
+    color: GlovoTheme.colors.textSecondary,
     fontWeight: "600",
   },
   ratingPanel: {
-    borderWidth: 1.5,
-    borderColor: "#000000",
+    borderRadius: GlovoTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.border,
+    backgroundColor: GlovoTheme.colors.background,
     padding: 16,
     marginBottom: 16,
+    alignItems: "center",
   },
   ratingPanelTitle: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#000000",
-    marginBottom: 10,
+    fontSize: 14,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+  },
+  ratingPanelSub: {
+    fontSize: 11,
+    color: GlovoTheme.colors.textSecondary,
+    marginTop: 2,
+    marginBottom: 12,
   },
   starsRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
   },
   starIcon: {
-    marginRight: 4,
+    marginHorizontal: 2,
+  },
+  ratingConfirmationBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 10,
+    backgroundColor: GlovoTheme.colors.secondaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: GlovoTheme.borderRadius.sm,
   },
   ratingConfirmation: {
     fontSize: 11,
-    color: "#027A48",
-    fontWeight: "600",
-    marginTop: 8,
-    lineHeight: 16,
+    color: "#065F46",
+    fontWeight: "700",
   },
   bottomBar: {
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E4E7EC",
-    backgroundColor: "#FFFFFF",
+    borderTopColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.white,
     gap: 12,
+    ...GlovoTheme.shadows.soft,
   },
   bookmarkButton: {
-    flex: 1,
-    height: 46,
+    flex: 0.8,
+    height: 48,
+    borderRadius: GlovoTheme.borderRadius.pill,
     borderWidth: 1.5,
-    borderColor: "#000000",
+    borderColor: GlovoTheme.colors.border,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   bookmarkedActiveButton: {
-    backgroundColor: "#000000",
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    borderColor: GlovoTheme.colors.primary,
   },
   bookmarkButtonText: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#000000",
-  },
-  bookmarkedActiveText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
   },
   applyButton: {
-    flex: 1.2,
-    height: 46,
-    backgroundColor: "#000000",
-    borderWidth: 1.5,
-    borderColor: "#000000",
+    flex: 1.4,
+    height: 48,
+    backgroundColor: GlovoTheme.colors.primary, // Signature Glovo Yellow
+    borderRadius: GlovoTheme.borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
+    ...GlovoTheme.shadows.glowYellow,
   },
   appliedButton: {
-    backgroundColor: "#027A48",
-    borderColor: "#027A48",
+    backgroundColor: GlovoTheme.colors.secondary,
   },
   applyButtonText: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+    letterSpacing: -0.2,
   },
 });
