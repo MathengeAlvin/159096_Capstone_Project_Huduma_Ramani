@@ -14,7 +14,7 @@ import {
   initialApplications,
 } from "../data/mockData";
 import { ServiceListing, ServiceApplication, ApplicationStatus, MetricCardData } from "../types";
-import { Building, ShieldCheck, MapPin, Mail, Phone, Info, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { ShieldCheck, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import {
   fetchProviderListings,
   createServiceListing,
@@ -136,8 +136,8 @@ export default function ProviderPortalApp() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col md:flex-row font-sans text-neutral-900 antialiased">
-      {/* Sidebar matching Wireframes 9 & 10 */}
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans text-neutral-900 antialiased">
+      {/* Sidebar matching Glovo styling */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -155,15 +155,15 @@ export default function ProviderPortalApp() {
           {/* Live API / Fallback Status Badge */}
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold border ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border shadow-2xs ${
                 isLiveApi
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-400"
-                  : "bg-neutral-100 text-neutral-700 border-neutral-300"
+                  ? "bg-[#E6F6F3] text-[#00A082] border-[#00A082]/30"
+                  : "bg-neutral-100 text-neutral-600 border-neutral-200"
               }`}
             >
               {isLiveApi ? (
                 <>
-                  <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+                  <Wifi className="w-3.5 h-3.5 text-[#00A082]" />
                   Django REST API (Live)
                 </>
               ) : (
@@ -176,7 +176,7 @@ export default function ProviderPortalApp() {
             <button
               onClick={loadListings}
               title="Refresh listings from backend"
-              className="p-1 border border-black/20 bg-white hover:border-black transition-colors"
+              className="p-2 rounded-full border border-neutral-200 bg-white hover:bg-neutral-100 hover:border-neutral-300 transition-all cursor-pointer shadow-2xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-neutral-700 ${isLoading ? "animate-spin" : ""}`} />
             </button>
@@ -184,7 +184,7 @@ export default function ProviderPortalApp() {
         </div>
 
         <div className="mt-6">
-          {/* TAB 1: DASHBOARD (Screenshot 142500) */}
+          {/* TAB 1: DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className="space-y-6">
               {/* 4 Metric Cards with Live Computed Signals */}
@@ -201,7 +201,7 @@ export default function ProviderPortalApp() {
             </div>
           )}
 
-          {/* TAB 2: MY LISTINGS (Screenshot 142514) */}
+          {/* TAB 2: MY LISTINGS */}
           {activeTab === "listings" && (
             <ListingsView
               listings={listings}
@@ -224,34 +224,34 @@ export default function ProviderPortalApp() {
           {/* TAB 4: ANALYTICS DETAIL */}
           {activeTab === "analytics" && (
             <div className="space-y-6">
-              <div className="border border-black/20 bg-white p-6">
-                <h3 className="text-lg font-bold text-black tracking-tight mb-2">
+              <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-xs">
+                <h3 className="text-lg font-black text-[#1E1E1E] tracking-tight mb-1">
                   Recommendation Algorithm Performance
                 </h3>
-                <p className="text-xs text-neutral-600 mb-6">
+                <p className="text-xs text-neutral-500 mb-6">
                   Empirical signals driving discovery visibility across Kibera & Mathare
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="border border-black/15 p-4 bg-neutral-50">
-                    <span className="text-[11px] font-bold uppercase text-neutral-500">
+                  <div className="rounded-2xl border border-[#FDE68A] p-5 bg-[#FFFBEB]">
+                    <span className="text-[11px] font-extrabold uppercase text-neutral-600">
                       Content-Based TF-IDF Match
                     </span>
-                    <p className="text-2xl font-extrabold text-black mt-1">94.2%</p>
+                    <p className="text-2xl font-black text-[#1E1E1E] mt-1">94.2%</p>
                     <p className="text-[11px] text-neutral-500 mt-1">Cosine similarity with user intent</p>
                   </div>
-                  <div className="border border-black/15 p-4 bg-neutral-50">
-                    <span className="text-[11px] font-bold uppercase text-neutral-500">
+                  <div className="rounded-2xl border border-neutral-200/80 p-5 bg-[#FAF9F6]">
+                    <span className="text-[11px] font-extrabold uppercase text-neutral-600">
                       NMF Latent Factor Score
                     </span>
-                    <p className="text-2xl font-extrabold text-black mt-1">0.824</p>
+                    <p className="text-2xl font-black text-[#1E1E1E] mt-1">0.824</p>
                     <p className="text-[11px] text-neutral-500 mt-1">Collaborative behavioral clustering</p>
                   </div>
-                  <div className="border border-black/15 p-4 bg-neutral-50">
-                    <span className="text-[11px] font-bold uppercase text-neutral-500">
+                  <div className="rounded-2xl border border-[#00A082]/25 p-5 bg-[#E6F6F3]">
+                    <span className="text-[11px] font-extrabold uppercase text-neutral-600">
                       Bayesian Quality Weight (γ)
                     </span>
-                    <p className="text-2xl font-extrabold text-black mt-1">4.76 / 5.0</p>
+                    <p className="text-2xl font-black text-[#1E1E1E] mt-1">4.76 / 5.0</p>
                     <p className="text-[11px] text-neutral-500 mt-1">Prior m=5, Global mean C=4.1</p>
                   </div>
                 </div>
@@ -263,9 +263,9 @@ export default function ProviderPortalApp() {
 
           {/* TAB 5: SETTINGS */}
           {activeTab === "settings" && (
-            <div className="border border-black/20 bg-white p-6 max-w-2xl space-y-6">
+            <div className="rounded-2xl border border-neutral-200/80 bg-white p-7 max-w-2xl space-y-6 shadow-xs">
               <div>
-                <h3 className="text-lg font-bold text-black tracking-tight">
+                <h3 className="text-lg font-black text-[#1E1E1E] tracking-tight">
                   Organization Profile
                 </h3>
                 <p className="text-xs text-neutral-500">
@@ -275,7 +275,7 @@ export default function ProviderPortalApp() {
 
               <div className="space-y-4 text-sm">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
                     Organization Name
                   </label>
                   <input
@@ -284,12 +284,12 @@ export default function ProviderPortalApp() {
                     onChange={(e) =>
                       setOrganization({ ...organization, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-black text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none text-sm text-[#1E1E1E]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
                     Registered Email
                   </label>
                   <input
@@ -298,12 +298,12 @@ export default function ProviderPortalApp() {
                     onChange={(e) =>
                       setOrganization({ ...organization, email: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-black font-mono text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none font-mono text-sm text-[#1E1E1E]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
                     Primary Operational Settlement
                   </label>
                   <select
@@ -314,7 +314,7 @@ export default function ProviderPortalApp() {
                         settlement: e.target.value as "Kibera" | "Mathare",
                       })
                     }
-                    className="w-full px-3 py-2 border border-black bg-white text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-sm text-[#1E1E1E]"
                   >
                     <option value="Kibera">Kibera</option>
                     <option value="Mathare">Mathare</option>
@@ -322,9 +322,9 @@ export default function ProviderPortalApp() {
                 </div>
 
                 <div className="pt-2">
-                  <div className="flex items-center gap-2 p-3 bg-neutral-50 border border-black/15 text-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-semibold text-neutral-800">
+                  <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-[#E6F6F3] border border-[#00A082]/30 text-xs">
+                    <ShieldCheck className="w-4 h-4 text-[#00A082] shrink-0" />
+                    <span className="font-bold text-[#00A082]">
                       Verified NGO Provider Partner (eMentoring Africa Network)
                     </span>
                   </div>

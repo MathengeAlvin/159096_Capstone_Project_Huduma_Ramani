@@ -44,28 +44,29 @@ export function MetricCards({ metrics }: MetricCardsProps) {
       {items.map((m, index) => (
         <div
           key={index}
-          className="border border-black/20 bg-white p-5 flex flex-col justify-between hover:border-black transition-colors"
+          className="rounded-2xl border border-neutral-200/80 bg-white p-5 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-[#FDE68A] transition-all group"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-600">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-500">
               {m.title}
             </span>
+            <span className="w-2 h-2 rounded-full bg-[#FFC244] opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
 
           <div className="my-2.5">
-            <span className="text-3xl font-extrabold tracking-tight text-black">
+            <span className="text-3xl font-black tracking-tight text-[#1E1E1E]">
               {m.value}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs font-semibold">
+          <div className="flex items-center gap-1.5 text-xs font-bold">
             {m.title === "AVG RATING" ? (
-              <span className="inline-flex items-center gap-1 text-neutral-600 font-medium">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+              <span className="inline-flex items-center gap-1 text-neutral-700 font-bold">
+                <Star className="w-3.5 h-3.5 fill-[#FFC244] text-[#F59E0B]" />
                 {m.change}
               </span>
             ) : m.isPositive ? (
-              <span className="inline-flex items-center gap-1 text-emerald-700">
+              <span className="inline-flex items-center gap-1 text-[#00A082]">
                 <TrendingUp className="w-3.5 h-3.5" />
                 {m.change}
               </span>
@@ -76,7 +77,7 @@ export function MetricCards({ metrics }: MetricCardsProps) {
               </span>
             )}
             {m.sublabel && (
-              <span className="text-[10px] text-neutral-400 font-normal ml-auto">
+              <span className="text-[10px] text-neutral-400 font-medium ml-auto">
                 {m.sublabel}
               </span>
             )}

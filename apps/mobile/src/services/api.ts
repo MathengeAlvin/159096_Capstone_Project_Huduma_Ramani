@@ -1,12 +1,30 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { MobileService, ServiceCategory } from "../types";
 import { MOCK_SERVICES } from "../data/mockServices";
 
-// Auto-detect web localhost vs physical device / local Wi-Fi LAN IP
-const DEFAULT_HOST =
-  Platform.OS === "web"
-    ? "http://localhost:8000/api"
-    : "http://192.168.100.25:8000/api";
+// Auto-detect web localhost vs dynamic Expo dev machine IP vs fallback IP
+function getDevHostIp(): string {
+  if (Platform.OS === "web") {
+    return "localhost";
+  }
+
+  // 1. Automatically resolve development PC IP from Expo bundler host (works across any Wi-Fi)
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    (Constants as any).manifest?.debuggerHost ||
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
+
+  if (hostUri) {
+    const ip = hostUri.split(":")[0];
+    if (ip) return ip;
+  }
+
+  // 2. Fallback to current machine Wi-Fi LAN IP
+  return "10.208.40.174";
+}
+
+const DEFAULT_HOST = `http://${getDevHostIp()}:8000/api`;
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST;
 
@@ -201,4 +219,3 @@ export async function submitLiveRating(
     return { success: false };
   }
 }
-

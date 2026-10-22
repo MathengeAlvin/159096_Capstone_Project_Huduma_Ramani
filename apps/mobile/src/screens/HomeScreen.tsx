@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { MobileService, ResidentUser } from "../types";
 import { MapViewComponent } from "../components/MapViewComponent";
+import { GlovoTheme } from "../theme";
 
 interface HomeScreenProps {
   user: ResidentUser;
@@ -42,16 +43,27 @@ export function HomeScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Top Search & System Status Bar */}
-        <View style={styles.searchBarWrapper}>
+        {/* Glovo Yellow Top Search & Header Bar */}
+        <View style={styles.headerWrapper}>
+          <View style={styles.greetingRow}>
+            <View>
+              <Text style={styles.greetingSub}>DISCOVER SERVICES IN</Text>
+              <Text style={styles.greetingTitle}>{user.settlement}, Nairobi</Text>
+            </View>
+            <View style={styles.userAvatar}>
+              <Text style={styles.userAvatarText}>{user.name.charAt(0)}</Text>
+            </View>
+          </View>
+
+          {/* Search Input Pill */}
           <TouchableOpacity
             style={styles.searchBar}
             onPress={onSearchPress}
-            activeOpacity={0.8}
+            activeOpacity={0.88}
           >
-            <Ionicons name="search" size={18} color="#000000" style={styles.searchIcon} />
+            <Ionicons name="search" size={18} color={GlovoTheme.colors.textDark} style={styles.searchIcon} />
             <Text style={styles.searchPlaceholder}>
-              Search clinics, legal aid, classes...
+              Search clinics, legal aid, skills...
             </Text>
           </TouchableOpacity>
 
@@ -88,9 +100,9 @@ export function HomeScreen({
                 activeOpacity={0.7}
               >
                 {isLoading ? (
-                  <ActivityIndicator size="small" color="#000000" />
+                  <ActivityIndicator size="small" color={GlovoTheme.colors.textDark} />
                 ) : (
-                  <Ionicons name="refresh" size={14} color="#000000" />
+                  <Ionicons name="refresh" size={14} color={GlovoTheme.colors.textDark} />
                 )}
               </TouchableOpacity>
             )}
@@ -112,10 +124,12 @@ export function HomeScreen({
             <View>
               <Text style={styles.sectionTitle}>Recommended for You</Text>
               <Text style={styles.sectionSubtitle}>
-                Ranked for {user.name} ({user.settlement}) • {user.interests.join(", ")}
+                Ranked for {user.name} • {user.interests.slice(0, 2).join(", ")}
               </Text>
             </View>
-            <Text style={styles.countBadge}>{services.length} Facilities</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{services.length} Facilities</Text>
+            </View>
           </View>
 
           <ScrollView
@@ -128,19 +142,17 @@ export function HomeScreen({
                 key={item.id}
                 style={styles.card}
                 onPress={() => onSelectService(item)}
-                activeOpacity={0.75}
+                activeOpacity={0.8}
               >
-                {/* Image Placeholder with Wireframe Diagonal Line */}
+                {/* Image Placeholder with Glovo Warm Tint */}
                 <View style={styles.imagePlaceholder}>
-                  <View style={styles.diagonalLine} />
                   <Ionicons
-                    name="image-outline"
-                    size={20}
-                    color="#98A2B3"
-                    style={styles.cornerIcon}
+                    name="business"
+                    size={26}
+                    color={GlovoTheme.colors.primaryHover}
                   />
                   <View style={styles.rankBadge}>
-                    <Text style={styles.rankText}>#{index + 1}</Text>
+                    <Text style={styles.rankText}>#{index + 1} Top Pick</Text>
                   </View>
                 </View>
 
@@ -153,7 +165,10 @@ export function HomeScreen({
                     {item.category}
                   </Text>
                   <View style={styles.ratingRow}>
-                    <Text style={styles.ratingText}>★ {item.rating.toFixed(1)}</Text>
+                    <View style={styles.starPill}>
+                      <Ionicons name="star" size={11} color={GlovoTheme.colors.star} />
+                      <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+                    </View>
                     <Text style={styles.distanceBadge}>{item.distanceKm} km</Text>
                   </View>
                 </View>
@@ -169,93 +184,124 @@ export function HomeScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow top notch/safe area
   },
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
-  searchBarWrapper: {
+  headerWrapper: {
     paddingHorizontal: 16,
     paddingTop: 10,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E4E7EC",
-    backgroundColor: "#FFFFFF",
+    paddingBottom: 12,
+    backgroundColor: GlovoTheme.colors.primary, // Signature Glovo Yellow
+    borderBottomLeftRadius: GlovoTheme.borderRadius.lg,
+    borderBottomRightRadius: GlovoTheme.borderRadius.lg,
+    ...GlovoTheme.shadows.soft,
   },
-  searchBar: {
-    height: 42,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
+  greetingRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    backgroundColor: "#FFFFFF",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  greetingSub: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#6B4C00", // Warm dark amber
+    letterSpacing: 0.8,
+  },
+  greetingTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+    letterSpacing: -0.3,
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: GlovoTheme.colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#E5A82E",
+  },
+  userAvatarText: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+  },
+  searchBar: {
+    height: 44,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    backgroundColor: GlovoTheme.colors.white,
+    ...GlovoTheme.shadows.soft,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   searchPlaceholder: {
     fontSize: 13,
-    color: "#667085",
-    fontWeight: "500",
+    color: GlovoTheme.colors.textSecondary,
+    fontWeight: "600",
   },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
+    marginTop: 10,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 2,
-    borderWidth: 1,
-    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    gap: 6,
   },
   statusLiveBadge: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#86EFAC",
+    backgroundColor: GlovoTheme.colors.white,
   },
   statusOfflineBadge: {
-    backgroundColor: "#F9FAFB",
-    borderColor: "#E5E7EB",
+    backgroundColor: "rgba(255, 255, 255, 0.65)",
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   statusLiveDot: {
-    backgroundColor: "#16A34A",
+    backgroundColor: GlovoTheme.colors.secondary, // Glovo Teal-Green
   },
   statusOfflineDot: {
-    backgroundColor: "#9CA3AF",
+    backgroundColor: GlovoTheme.colors.textMuted,
   },
   statusText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   statusLiveText: {
-    color: "#15803D",
+    color: "#065F46",
   },
   statusOfflineText: {
-    color: "#4B5563",
+    color: GlovoTheme.colors.textSecondary,
   },
   refreshButton: {
-    padding: 4,
-    borderWidth: 1,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+    padding: 6,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.white,
+    ...GlovoTheme.shadows.soft,
   },
   carouselSection: {
     flex: 1,
     paddingTop: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
   },
   sectionHeader: {
     paddingHorizontal: 16,
@@ -265,25 +311,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "900",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
     letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    fontSize: 10,
-    color: "#667085",
+    fontSize: 11,
+    color: GlovoTheme.colors.textSecondary,
     marginTop: 2,
+    fontWeight: "500",
   },
   countBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    borderRadius: GlovoTheme.borderRadius.pill,
+  },
+  countBadgeText: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#000000",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    backgroundColor: "#F2F4F7",
-    borderWidth: 1,
-    borderColor: "#000000",
+    fontWeight: "900",
+    color: "#78350F",
   },
   carouselContainer: {
     paddingHorizontal: 16,
@@ -292,75 +340,72 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+    borderRadius: GlovoTheme.borderRadius.md,
+    backgroundColor: GlovoTheme.colors.white,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.border,
+    ...GlovoTheme.shadows.soft,
   },
   imagePlaceholder: {
-    height: 90,
-    backgroundColor: "#F2F4F7",
-    borderBottomWidth: 1.5,
-    borderBottomColor: "#000000",
+    height: 88,
+    backgroundColor: GlovoTheme.colors.primaryLight, // Warm cream yellow
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
-  },
-  diagonalLine: {
-    position: "absolute",
-    width: "140%",
-    height: 1,
-    backgroundColor: "#D0D5DD",
-    transform: [{ rotate: "28deg" }],
-  },
-  cornerIcon: {
-    position: "absolute",
-    top: 6,
-    left: 6,
   },
   rankBadge: {
     position: "absolute",
     top: 6,
     right: 6,
-    backgroundColor: "#000000",
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 2,
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    ...GlovoTheme.shadows.soft,
   },
   rankText: {
     fontSize: 9,
     fontWeight: "900",
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
   },
   cardInfo: {
-    padding: 8,
+    padding: 10,
   },
   cardName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "800",
-    color: "#000000",
+    color: GlovoTheme.colors.textDark,
   },
   cardCategory: {
-    fontSize: 10,
-    color: "#667085",
+    fontSize: 11,
+    color: GlovoTheme.colors.textSecondary,
     marginTop: 2,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 6,
+    marginTop: 8,
+  },
+  starPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: GlovoTheme.borderRadius.xs,
+    gap: 3,
   },
   ratingText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#000000",
+    fontWeight: "800",
+    color: "#92400E",
   },
   distanceBadge: {
     fontSize: 10,
-    color: "#475467",
-    fontWeight: "600",
+    color: GlovoTheme.colors.secondary,
+    fontWeight: "800",
   },
 });

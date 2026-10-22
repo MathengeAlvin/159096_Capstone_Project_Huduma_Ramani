@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { MainTab } from "../types";
+import { GlovoTheme } from "../theme";
 
 interface BottomNavBarProps {
   activeTab: MainTab;
@@ -28,11 +29,11 @@ export function BottomNavBar({ activeTab, onTabChange, savedCount = 0 }: BottomN
             style={styles.tabButton}
             activeOpacity={0.7}
           >
-            <View style={styles.iconContainer}>
+            <View style={[styles.iconContainer, isActive && styles.activeIconContainer]}>
               <Ionicons
                 name={isActive ? tab.activeIcon : tab.icon}
                 size={22}
-                color={isActive ? "#000000" : "#8E8E93"}
+                color={isActive ? GlovoTheme.colors.textDark : GlovoTheme.colors.textMuted}
               />
               {tab.id === "saved" && savedCount > 0 && (
                 <View style={styles.badge}>
@@ -53,14 +54,15 @@ export function BottomNavBar({ activeTab, onTabChange, savedCount = 0 }: BottomN
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    height: Platform.OS === "ios" ? 78 : 62,
+    height: Platform.OS === "ios" ? 82 : 66,
     borderTopWidth: 1,
-    borderTopColor: "#E5E5EA",
-    backgroundColor: "#FFFFFF",
+    borderTopColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.white,
     alignItems: "center",
     justifyContent: "space-around",
-    paddingBottom: Platform.OS === "ios" ? 18 : 6,
-    paddingTop: 6,
+    paddingBottom: Platform.OS === "ios" ? 20 : 8,
+    paddingTop: 8,
+    ...GlovoTheme.shadows.soft,
   },
   tabButton: {
     flex: 1,
@@ -69,34 +71,42 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: "relative",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: GlovoTheme.borderRadius.pill,
+  },
+  activeIconContainer: {
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow pill highlight
   },
   tabLabel: {
     fontSize: 11,
-    marginTop: 2,
-    fontWeight: "500",
+    marginTop: 3,
+    fontWeight: "600",
   },
   activeLabel: {
-    color: "#000000",
-    fontWeight: "700",
+    color: GlovoTheme.colors.textDark,
+    fontWeight: "800",
   },
   inactiveLabel: {
-    color: "#8E8E93",
+    color: GlovoTheme.colors.textMuted,
   },
   badge: {
     position: "absolute",
-    top: -4,
-    right: -8,
-    backgroundColor: "#000000",
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    top: -2,
+    right: -4,
+    backgroundColor: GlovoTheme.colors.secondary, // Glovo teal-green accent for badge
+    borderRadius: GlovoTheme.borderRadius.pill,
+    minWidth: 17,
+    height: 17,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: GlovoTheme.colors.white,
   },
   badgeText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.white,
     fontSize: 9,
-    fontWeight: "bold",
+    fontWeight: "900",
   },
 });

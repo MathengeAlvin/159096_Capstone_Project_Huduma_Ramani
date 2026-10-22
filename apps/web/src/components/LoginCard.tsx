@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Lock, Mail, Building2 } from "lucide-react";
 
 interface LoginCardProps {
   onLoginSuccess: (email: string) => void;
@@ -21,28 +20,31 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-neutral-100 p-4">
-      {/* Centered Box matching Screenshot 142444 */}
-      <div className="w-full max-w-md bg-white border-2 border-black p-8 shadow-sm">
-        {/* Header */}
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FA] p-4">
+      {/* Centered Box matching Glovo style */}
+      <div className="w-full max-w-md bg-white rounded-3xl border border-neutral-200/80 p-8 shadow-xl">
+        {/* Brand Icon & Header */}
         <div className="text-center">
-          <h1 className="text-2xl font-black tracking-tight text-black">
+          <div className="w-12 h-12 rounded-full bg-[#FFC244] mx-auto mb-3 flex items-center justify-center font-black text-xl text-[#1E1E1E] shadow-xs">
+            H
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-[#1E1E1E]">
             Huduma Ramani
           </h1>
-          <p className="text-xs uppercase tracking-wider text-neutral-600 font-semibold mt-1">
+          <p className="text-xs uppercase tracking-wider text-neutral-500 font-bold mt-1">
             Provider Portal — {isRegister ? "Register" : "Log In"}
           </p>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-black/20 my-6"></div>
+        <div className="w-full h-px bg-neutral-100 my-6"></div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           {isRegister && (
             <>
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-black mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
                   Organization Name
                 </label>
                 <div className="relative">
@@ -52,19 +54,19 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="e.g. Kibera Community Foundation"
-                    className="w-full px-3 py-2.5 border border-black text-sm focus:outline-hidden bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-[#1E1E1E]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-black mb-1">
+                <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
                   Primary Settlement
                 </label>
                 <select
                   value={settlement}
                   onChange={(e) => setSettlement(e.target.value as "Kibera" | "Mathare")}
-                  className="w-full px-3 py-2.5 border border-black text-sm focus:outline-hidden bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-[#1E1E1E]"
                 >
                   <option value="Kibera">Kibera</option>
                   <option value="Mathare">Mathare</option>
@@ -74,7 +76,7 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
           )}
 
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-black mb-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
               Organization Email
             </label>
             <input
@@ -83,12 +85,12 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="organization@example.com"
-              className="w-full px-3 py-2.5 border border-black text-sm focus:outline-hidden bg-white font-mono placeholder-neutral-400"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white font-mono placeholder-neutral-400 text-[#1E1E1E]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-black mb-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-600 mb-1">
               Password
             </label>
             <input
@@ -97,14 +99,14 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3 py-2.5 border border-black text-sm focus:outline-hidden bg-white font-mono"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white font-mono text-[#1E1E1E]"
             />
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full py-3 border border-black bg-black text-white text-sm font-bold uppercase tracking-wider hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="w-full py-3.5 rounded-full bg-[#FFC244] hover:bg-[#F5B42E] text-[#1E1E1E] text-sm font-black uppercase tracking-wider transition-all shadow-md shadow-[#FFC244]/25 cursor-pointer"
             >
               {isRegister ? "Register Organization" : "Log In"}
             </button>
@@ -114,7 +116,7 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
             <button
               type="button"
               onClick={() => setIsRegister(!isRegister)}
-              className="text-xs font-semibold text-black underline underline-offset-4 hover:text-neutral-600 transition-colors cursor-pointer"
+              className="text-xs font-bold text-neutral-600 hover:text-[#1E1E1E] transition-colors cursor-pointer"
             >
               {isRegister
                 ? "Already registered? Log In"

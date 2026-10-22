@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
 import { MobileService, ServiceCategory } from "../types";
 import { ALL_CATEGORIES } from "../data/mockServices";
+import { GlovoTheme } from "../theme";
 
 interface MapViewComponentProps {
   services: MobileService[];
@@ -48,7 +48,7 @@ export function MapViewComponent({
     if (onSettlementChange) onSettlementChange(s);
   };
 
-  // Listen for message from Leaflet map
+  // Listen for message from Leaflet map on Web
   useEffect(() => {
     if (Platform.OS === "web" && typeof window !== "undefined") {
       const handleMessage = (event: MessageEvent) => {
@@ -64,13 +64,11 @@ export function MapViewComponent({
 
   const coords = SETTLEMENT_CENTERS[activeSettlement];
 
-  // Set of recommended service IDs for fast lookup & visual highlighting
   const recommendedIds = useMemo(
     () => new Set(recommendedServices.map((r) => r.id)),
     [recommendedServices]
   );
 
-  // Filter services by active settlement and category
   const filteredServices = useMemo(() => {
     return services.filter((s) => {
       const matchesSettlement = s.settlement.toLowerCase() === activeSettlement.toLowerCase();
@@ -80,7 +78,7 @@ export function MapViewComponent({
     });
   }, [services, activeSettlement, selectedCategory]);
 
-  // Generate interactive Leaflet HTML with OpenStreetMap tiles
+  // Leaflet HTML styled with Glovo yellow and white theme
   const leafletHtml = useMemo(() => {
     const markersData = filteredServices.map((s) => ({
       id: s.id,
@@ -110,49 +108,52 @@ export function MapViewComponent({
             width: 100%;
             height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #e5e7eb;
+            background: #fffdf5;
             touch-action: pan-x pan-y pinch-zoom;
           }
-          /* Standard community provider pin */
+          /* Standard community provider pin (Glovo style) */
           .provider-pin {
-            background-color: #111827;
-            color: #ffffff;
+            background-color: #ffffff;
+            color: #1e1e1e;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 25px;
+            height: 25px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
-            font-weight: 800;
-            border: 2px solid #ffffff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+            font-size: 11px;
+            font-weight: 900;
+            border: 2.5px solid #ffc244;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             cursor: pointer;
             transition: transform 0.15s ease;
           }
           .provider-pin:hover {
-            transform: scale(1.2);
+            transform: scale(1.25);
           }
-          /* Top Recommended facility pin (Ranked/Golden Highlight) */
+          /* Recommended facility pin (Glovo Yellow Hero Badge) */
           .provider-pin.recommended {
-            background-color: #2563eb;
-            border: 2.5px solid #fbbf24;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.6), 0 2px 4px rgba(0,0,0,0.3);
-            width: 28px;
-            height: 28px;
-            font-size: 11px;
+            background-color: #ffc244;
+            color: #1e1e1e;
+            border: 2.5px solid #1e1e1e;
+            box-shadow: 0 0 10px rgba(255, 194, 68, 0.7), 0 3px 6px rgba(0,0,0,0.25);
+            width: 30px;
+            height: 30px;
+            font-size: 13px;
             z-index: 1000 !important;
           }
           .provider-pin.selected {
-            background-color: #dc2626 !important;
+            background-color: #00a082 !important;
+            color: #ffffff !important;
             border-color: #ffffff !important;
             transform: scale(1.35);
           }
           .leaflet-popup-content-wrapper {
-            border-radius: 6px;
-            border: 2px solid #111827;
-            padding: 2px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid #ffc244;
+            padding: 4px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            background: #ffffff;
           }
           .popup-header {
             display: flex;
@@ -164,33 +165,33 @@ export function MapViewComponent({
           .popup-title {
             font-size: 14px;
             font-weight: 900;
-            color: #111827;
+            color: #1e1e1e;
             margin: 0;
             line-height: 1.2;
           }
           .rec-badge {
             display: inline-block;
-            background: #dbeafe;
-            color: #1e40af;
+            background: #ffc244;
+            color: #1e1e1e;
             font-size: 9px;
-            font-weight: 800;
-            padding: 2px 6px;
-            border-radius: 2px;
+            font-weight: 900;
+            padding: 3px 7px;
+            border-radius: 999px;
             text-transform: uppercase;
           }
           .popup-cat {
             display: inline-block;
             font-size: 10px;
             font-weight: 800;
-            color: #4b5563;
+            color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-top: 2px;
           }
           .popup-address {
             font-size: 11px;
-            color: #6b7280;
-            margin: 3px 0;
+            color: #4b5563;
+            margin: 4px 0;
           }
           .popup-rating {
             font-size: 12px;
@@ -201,31 +202,32 @@ export function MapViewComponent({
           .popup-btn {
             display: block;
             margin-top: 10px;
-            background: #111827;
-            color: #ffffff !important;
+            background: #ffc244;
+            color: #1e1e1e !important;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 900;
             text-align: center;
             padding: 8px 12px;
             text-decoration: none;
-            border-radius: 3px;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(255, 194, 68, 0.4);
+            transition: background 0.15s;
           }
           .popup-btn:hover {
-            background: #000000;
+            background: #f5b42e;
           }
           .osm-attribution {
             position: absolute;
             bottom: 4px;
             left: 4px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 3px 8px;
             font-size: 9px;
-            font-weight: 700;
+            font-weight: 800;
             color: #374151;
-            border-radius: 2px;
-            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.06);
             z-index: 1000;
             pointer-events: none;
           }
@@ -249,7 +251,6 @@ export function MapViewComponent({
             boxZoom: true,
           });
 
-          // OpenStreetMap Tile Layer (Renders informal footpaths and alleys)
           L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
@@ -271,9 +272,9 @@ export function MapViewComponent({
             const icon = L.divIcon({
               className: 'pin-wrapper',
               html: '<div class="' + pinClasses + '" title="' + m.name + '">' + iconContent + '</div>',
-              iconSize: [28, 28],
-              iconAnchor: [14, 14],
-              popupAnchor: [0, -14]
+              iconSize: [30, 30],
+              iconAnchor: [15, 15],
+              popupAnchor: [0, -15]
             });
 
             const marker = L.marker([m.lat, m.lon], { icon }).addTo(map);
@@ -302,7 +303,6 @@ export function MapViewComponent({
             }
           }
 
-          // Center helper for parent window
           window.recenterMap = function(lat, lon, zoom) {
             map.flyTo([lat, lon], zoom || 15);
           };
@@ -314,7 +314,7 @@ export function MapViewComponent({
 
   return (
     <View style={[styles.container, isExpanded && styles.expandedContainer]}>
-      {/* Top Map Toolbar: Settlement Switcher, Filter Count, Fullscreen Toggle */}
+      {/* Top Map Toolbar: Settlement Switcher & Filter Count */}
       <View style={styles.topToolbar}>
         <View style={styles.settlementRow}>
           <TouchableOpacity
@@ -323,7 +323,7 @@ export function MapViewComponent({
               activeSettlement === "Kibera" && styles.activeSettlementPill,
             ]}
             onPress={() => handleSettlementSwitch("Kibera")}
-            activeOpacity={0.75}
+            activeOpacity={0.8}
           >
             <Text
               style={[
@@ -341,7 +341,7 @@ export function MapViewComponent({
               activeSettlement === "Mathare" && styles.activeSettlementPill,
             ]}
             onPress={() => handleSettlementSwitch("Mathare")}
-            activeOpacity={0.75}
+            activeOpacity={0.8}
           >
             <Text
               style={[
@@ -372,7 +372,7 @@ export function MapViewComponent({
             <Ionicons
               name={isExpanded ? "contract-outline" : "expand-outline"}
               size={16}
-              color="#000000"
+              color={GlovoTheme.colors.textDark}
             />
           </TouchableOpacity>
         </View>
@@ -411,7 +411,7 @@ export function MapViewComponent({
         </ScrollView>
       </View>
 
-      {/* Map Surface (Fully Interactive Leaflet / OpenStreetMap) */}
+      {/* Map Surface (Leaflet / OpenStreetMap via WebView on Mobile or iframe on Web) */}
       <View style={styles.mapSurface}>
         {Platform.OS === "web" ? (
           <iframe
@@ -449,11 +449,11 @@ export function MapViewComponent({
         {/* Map Legend Overlay at Bottom */}
         <View style={styles.mapLegendOverlay}>
           <View style={styles.legendItem}>
-            <View style={styles.legendBlueDot} />
+            <View style={styles.legendYellowDot} />
             <Text style={styles.legendText}>Recommended</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={styles.legendBlackDot} />
+            <View style={styles.legendWhiteDot} />
             <Text style={styles.legendText}>All Providers ({services.length})</Text>
           </View>
         </View>
@@ -464,9 +464,9 @@ export function MapViewComponent({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1.5,
-    borderBottomColor: "#000000",
+    backgroundColor: GlovoTheme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: GlovoTheme.colors.border,
     height: 310,
     position: "relative",
     display: "flex",
@@ -480,9 +480,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     paddingBottom: 6,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: GlovoTheme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: GlovoTheme.colors.borderLight,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -492,23 +492,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   settlementPill: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 11,
     paddingVertical: 5,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.background,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.border,
   },
   activeSettlementPill: {
-    backgroundColor: "#000000",
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    borderColor: GlovoTheme.colors.primary,
   },
   settlementPillText: {
     fontSize: 11,
-    fontWeight: "900",
-    color: "#000000",
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   activeSettlementPillText: {
-    color: "#FFFFFF",
+    color: GlovoTheme.colors.textDark,
+    fontWeight: "900",
   },
   toolbarRight: {
     flexDirection: "row",
@@ -516,29 +518,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badgeCountBox: {
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
+    backgroundColor: GlovoTheme.colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: GlovoTheme.borderRadius.pill,
   },
   badgeCountText: {
     fontSize: 10,
-    fontWeight: "800",
-    color: "#1F2937",
+    fontWeight: "900",
+    color: "#78350F",
   },
   expandButton: {
-    padding: 5,
-    borderWidth: 1.5,
-    borderColor: "#000000",
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
+    padding: 6,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.primaryLight,
   },
   categoryFilterBar: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: GlovoTheme.colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: GlovoTheme.colors.borderLight,
     paddingVertical: 6,
   },
   categoryScrollContent: {
@@ -546,72 +544,75 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   categoryChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: GlovoTheme.borderRadius.pill,
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    backgroundColor: "#FFFFFF",
+    borderColor: GlovoTheme.colors.border,
+    backgroundColor: GlovoTheme.colors.background,
   },
   activeCategoryChip: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    borderColor: GlovoTheme.colors.primary,
   },
   categoryChipText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
-    color: "#4B5563",
+    color: GlovoTheme.colors.textSecondary,
   },
   activeCategoryChipText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
+    fontWeight: "900",
   },
   mapSurface: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FFFDF7",
     position: "relative",
   },
   mapLegendOverlay: {
     position: "absolute",
-    bottom: 6,
-    right: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.92)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 3,
+    bottom: 8,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: GlovoTheme.borderRadius.sm,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)",
+    borderColor: GlovoTheme.colors.borderYellow,
     flexDirection: "row",
     gap: 12,
     zIndex: 1000,
     pointerEvents: "none",
+    ...GlovoTheme.shadows.soft,
   },
   legendItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
-  legendBlueDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#2563EB",
+  legendYellowDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: GlovoTheme.colors.primary,
     borderWidth: 1.5,
-    borderColor: "#FBBF24",
+    borderColor: GlovoTheme.colors.textDark,
   },
-  legendBlackDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#111827",
+  legendWhiteDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: GlovoTheme.colors.white,
+    borderWidth: 1.5,
+    borderColor: GlovoTheme.colors.primary,
   },
   legendText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#374151",
+    fontSize: 10,
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   webView: {
     flex: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FFFDF7",
   },
 });
