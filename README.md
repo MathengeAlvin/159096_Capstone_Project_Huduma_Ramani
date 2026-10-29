@@ -41,4 +41,47 @@ Due to the absence of formal street addressing and centralized digital directori
 
 ---
 
-## 🏗️ System Architecture
+## 📊 Dataset & Categories
+
+The directory is seeded with **247 community facilities** and **242 registered providers** gathered from OpenStreetMap, Map Kibera exports, and non-formal institutional directories across:
+
+1. 🏥 Healthcare
+2. ⚖️ Legal Aid
+3. 📚 Education
+4. 🤝 Mentorship
+5. 🛠️ Vocational Training
+6. 🎓 Scholarships
+7. 💻 Digital Literacy
+8. 🧠 Mental Health
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies & Tools |
+| :--- | :--- |
+| **Backend API** | Python 3.12+, Django 6.1.2, Django REST Framework 3.18.0 |
+| **Machine Learning** | Scikit-learn 1.9.0, NumPy 2.0.0, Joblib 1.6.0 |
+| **Mobile Client** | React Native 0.86.3, Expo SDK ~57.0.25, `react-native-webview` 14.0.1 |
+| **Web Portal** | Next.js 16.3.6 (App Router, Turbopack), React 19.2, Tailwind CSS v4, Lucide React |
+| **Mapping Engine** | Leaflet.js 1.9.4, OpenStreetMap Standard Carto Tiles |
+| **Database** | SQLite 3 (WAL mode enabled), extensible to PostgreSQL + PostGIS |
+
+---
+
+## ⚡ Getting Started
+
+### Prerequisites
+* **Python 3.12+**
+* **Node.js 20+** and `npm`
+* **Git**
+* Expo Go app installed on your physical testing device (optional, for mobile testing)
+
+---
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/MathengeAlvin/159096_Capstone_Project_Huduma_Ramani.git](https://github.com/MathengeAlvin/159096_Capstone_Project_Huduma_Ramani.git)
+cd 159096_Capstone_Project_Huduma_Ramani
+
+
