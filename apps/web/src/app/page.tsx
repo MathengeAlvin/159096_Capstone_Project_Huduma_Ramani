@@ -7,7 +7,7 @@ import { MetricCards } from "../components/MetricCards";
 import { Charts } from "../components/Charts";
 import { RecentApplications } from "../components/RecentApplications";
 import { ListingsView } from "../components/ListingsView";
-import { LoginCard } from "../components/LoginCard";
+import { LoginCard, AuthSubmitData } from "../components/LoginCard";
 import {
   initialOrganization,
   initialListings,
@@ -20,10 +20,12 @@ import {
   createServiceListing,
   updateServiceListing,
   deleteServiceListing,
+  registerOrLoginProvider,
 } from "../services/api";
 
 export default function ProviderPortalApp() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  // Start on Login/Register screen by default
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<NavTab>("dashboard");
   const [organization, setOrganization] = useState(initialOrganization);
   const [listings, setListings] = useState<ServiceListing[]>(initialListings);
@@ -31,10 +33,12 @@ export default function ProviderPortalApp() {
   const [isLiveApi, setIsLiveApi] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load provider listings from live Django REST API on mount
+  // Load provider listings from live Django REST API on mount or org change
   useEffect(() => {
-    loadListings();
-  }, [organization.id]);
+    if (isAuthenticated) {
+      loadListings();
+    }
+  }, [organization.id, isAuthenticated]);
 
   const loadListings = async () => {
     setIsLoading(true);
@@ -47,6 +51,31 @@ export default function ProviderPortalApp() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAuthSuccess = async (data: AuthSubmitData) => {
+    const defaultName = data.email
+      .split("@")[0]
+      .replace(/[._-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const orgName = data.name || defaultName;
+
+    // Persist or fetch provider account in Cloud Firestore via Django backend
+    const syncRes = await registerOrLoginProvider({
+      name: orgName,
+      email: data.email,
+      settlement: data.settlement || "Kibera",
+    });
+
+    setOrganization({
+      id: syncRes.providerId,
+      name: orgName,
+      shortName: orgName.slice(0, 10),
+      email: data.email,
+      settlement: data.settlement || "Kibera",
+      verified: true,
+    });
+    setIsAuthenticated(true);
   };
 
   const handleAddListing = async (newListing: Partial<ServiceListing>) => {
@@ -117,7 +146,7 @@ export default function ProviderPortalApp() {
   }, [listings]);
 
   if (!isAuthenticated) {
-    return <LoginCard onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginCard onLoginSuccess={handleAuthSuccess} />;
   }
 
   const getHeaderTitle = () => {

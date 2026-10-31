@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import { MobileService, ServiceCategory } from "../types";
+import { MobileService, ServiceCategory, ResidentUser } from "../types";
 import { MOCK_SERVICES } from "../data/mockServices";
 
 // Auto-detect web localhost vs dynamic Expo dev machine IP vs fallback IP
@@ -218,4 +218,84 @@ export async function submitLiveRating(
     console.warn("[Huduma Mobile API] Rating submission failed, handled offline:", err);
     return { success: false };
   }
+}
+
+/**
+ * Registers or logs in a resident user, persisting their account in Cloud Firestore.
+ */
+export async function registerOrLoginResident(user: {
+  name: string;
+  email: string;
+  settlement: "Kibera" | "Mathare";
+  interests?: ServiceCategory[];
+}): Promise<{ user: ResidentUser; storedInFirestore: boolean }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        settlement: user.settlement,
+        role: "resident",
+        interests: user.interests || [],
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        user: {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          settlement: data.user.settlement,
+          interests: (data.user.interests as ServiceCategory[]) || [],
+        },
+        storedInFirestore: data.stored_in_firestore ?? false,
+      };
+    }
+  } catch (err) {
+    console.warn("[Huduma Mobile API] Auth sync to Firestore offline, using local session:", err);
+  }
+
+  // Graceful offline fallback
+  return {
+    user: {
+      id: `res-${Date.now().toString().slice(-4)}`,
+      name: user.name,
+      email: user.email,
+      settlement: user.settlement,
+      interests: user.interests || [],
+    },
+    storedInFirestore: false,
+  };
+}
+
+/**
+ * Persists updated interest questionnaire categories to the resident's Firestore profile.
+ */
+export async function syncUserInterestsToFirestore(
+  userId: string,
+  email: string,
+  interests: ServiceCategory[]
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/interests/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        email: email,
+        interests: interests,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.stored_in_firestore ?? false;
+    }
+  } catch (err) {
+    console.warn("[Huduma Mobile API] Could not sync interests to Firestore:", err);
+  }
+  return false;
 }

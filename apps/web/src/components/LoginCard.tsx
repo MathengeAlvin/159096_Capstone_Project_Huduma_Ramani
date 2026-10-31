@@ -2,21 +2,33 @@
 
 import React, { useState } from "react";
 
+export interface AuthSubmitData {
+  email: string;
+  isRegister: boolean;
+  name?: string;
+  settlement?: "Kibera" | "Mathare";
+}
+
 interface LoginCardProps {
-  onLoginSuccess: (email: string) => void;
+  onLoginSuccess: (data: AuthSubmitData) => void;
 }
 
 export function LoginCard({ onLoginSuccess }: LoginCardProps) {
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("organization@example.com");
-  const [password, setPassword] = useState("password123");
-  const [orgName, setOrgName] = useState("Kibera Aid Org");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [settlement, setSettlement] = useState<"Kibera" | "Mathare">("Kibera");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-    onLoginSuccess(email);
+    onLoginSuccess({
+      email,
+      isRegister,
+      name: orgName.trim() || undefined,
+      settlement,
+    });
   };
 
   return (
@@ -53,7 +65,7 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
                     required
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="e.g. Kibera Community Foundation"
+                    placeholder="e.g. Kibera Community Health Care"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:border-[#FFC244] focus:ring-2 focus:ring-[#FFC244]/20 outline-none bg-white text-[#1E1E1E]"
                   />
                 </div>

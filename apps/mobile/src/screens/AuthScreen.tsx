@@ -20,23 +20,25 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [name, setName] = useState("Wanjiku Kamau");
-  const [email, setEmail] = useState("wanjiku@kibera.org");
-  const [password, setPassword] = useState("password123");
+  const [isSignUp, setIsSignUp] = useState(true); // Default to registration so new users can create account and pick interests
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [settlement, setSettlement] = useState<"Kibera" | "Mathare">("Kibera");
 
   const handleSubmit = () => {
-    if (!email.trim() || !password.trim()) return;
+    const trimmedEmail = email.trim() || (isSignUp ? "resident@huduma.org" : INITIAL_USER.email);
+    const trimmedName = name.trim() || (isSignUp ? "New Community Resident" : INITIAL_USER.name);
 
     const user: ResidentUser = {
-      id: isSignUp ? `res-${Date.now().toString().slice(-4)}` : INITIAL_USER.id,
-      name: isSignUp ? name : INITIAL_USER.name,
-      email: email.trim(),
+      id: `res-${Date.now().toString().slice(-4)}`,
+      name: trimmedName,
+      email: trimmedEmail,
       settlement,
       interests: isSignUp ? [] : INITIAL_USER.interests,
     };
 
+    // isNewUser triggers the questionnaire if signing up or if no interests
     onAuthSuccess(user, isSignUp);
   };
 
@@ -58,6 +60,15 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
           {/* Form */}
           <View style={styles.formContainer}>
+            <Text style={styles.formModeTitle}>
+              {isSignUp ? "Create a Resident Account" : "Log In to Your Account"}
+            </Text>
+            <Text style={styles.formModeSubtitle}>
+              {isSignUp
+                ? "Register to personalize recommendations for health, education, and legal services."
+                : "Welcome back! Enter your details to access your saved directory."}
+            </Text>
+
             {isSignUp && (
               <>
                 <View style={styles.inputGroup}>
@@ -66,7 +77,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                     style={styles.input}
                     value={name}
                     onChangeText={setName}
-                    placeholder="Enter your name"
+                    placeholder="e.g. Wanjiku Kamau"
                     placeholderTextColor={GlovoTheme.colors.textMuted}
                   />
                 </View>
@@ -119,7 +130,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="Enter your email"
+                placeholder="e.g. resident@example.com"
                 placeholderTextColor={GlovoTheme.colors.textMuted}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -145,7 +156,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               activeOpacity={0.85}
             >
               <Text style={styles.submitButtonText}>
-                {isSignUp ? "Create Resident Account" : "Log In to Directory"}
+                {isSignUp ? "Register & Select Interests →" : "Log In to Directory"}
               </Text>
             </TouchableOpacity>
 
@@ -158,7 +169,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               <Text style={styles.switchModeText}>
                 {isSignUp
                   ? "Already have an account? Log In"
-                  : "New resident? Create an Account"}
+                  : "New resident? Register to choose your interests"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -177,20 +188,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
     paddingHorizontal: 24,
-    paddingVertical: 36,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   headerContainer: {
     alignItems: "center",
-    marginBottom: 36,
+    marginBottom: 28,
   },
   logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: GlovoTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 14,
@@ -200,38 +210,55 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "900",
     color: GlovoTheme.colors.textDark,
-    letterSpacing: -0.4,
-    textAlign: "center",
+    letterSpacing: -0.5,
   },
   brandSubtitle: {
     fontSize: 13,
-    color: GlovoTheme.colors.textSecondary,
+    fontWeight: "700",
+    color: GlovoTheme.colors.secondary,
     marginTop: 4,
     textAlign: "center",
-    fontWeight: "500",
   },
   formContainer: {
     width: "100%",
+    backgroundColor: GlovoTheme.colors.white,
+    borderRadius: GlovoTheme.borderRadius.lg,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderLight,
+    ...GlovoTheme.shadows.soft,
+  },
+  formModeTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+    marginBottom: 4,
+  },
+  formModeSubtitle: {
+    fontSize: 12,
+    color: GlovoTheme.colors.textSecondary,
+    marginBottom: 20,
+    lineHeight: 18,
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "900",
     color: GlovoTheme.colors.textDark,
+    letterSpacing: 0.8,
     marginBottom: 6,
-    letterSpacing: 0.5,
   },
   input: {
-    height: 50,
+    height: 48,
     borderWidth: 1.5,
-    borderColor: GlovoTheme.colors.border,
+    borderColor: GlovoTheme.colors.borderLight,
     borderRadius: GlovoTheme.borderRadius.md,
     paddingHorizontal: 16,
     fontSize: 14,
     color: GlovoTheme.colors.textDark,
-    backgroundColor: GlovoTheme.colors.background,
+    backgroundColor: GlovoTheme.colors.white,
     fontWeight: "600",
   },
   settlementToggleRow: {
@@ -241,49 +268,49 @@ const styles = StyleSheet.create({
   settlementOption: {
     flex: 1,
     height: 44,
-    borderRadius: GlovoTheme.borderRadius.pill,
     borderWidth: 1.5,
-    borderColor: GlovoTheme.colors.border,
+    borderColor: GlovoTheme.colors.borderLight,
+    borderRadius: GlovoTheme.borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: GlovoTheme.colors.background,
+    backgroundColor: GlovoTheme.colors.white,
   },
   selectedSettlementOption: {
-    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
     borderColor: GlovoTheme.colors.primary,
+    backgroundColor: GlovoTheme.colors.primaryLight,
   },
   settlementText: {
     fontSize: 13,
     fontWeight: "800",
-    color: GlovoTheme.colors.textDark,
+    color: GlovoTheme.colors.textSecondary,
   },
   selectedSettlementText: {
     color: GlovoTheme.colors.textDark,
   },
   submitButton: {
     height: 52,
-    backgroundColor: GlovoTheme.colors.primary, // Glovo Yellow
     borderRadius: GlovoTheme.borderRadius.pill,
+    backgroundColor: GlovoTheme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 10,
+    marginBottom: 14,
     ...GlovoTheme.shadows.glowYellow,
   },
   submitButtonText: {
-    color: GlovoTheme.colors.textDark,
     fontSize: 15,
     fontWeight: "900",
-    letterSpacing: -0.2,
+    color: GlovoTheme.colors.textDark,
+    letterSpacing: 0.3,
   },
   switchModeButton: {
     alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
     paddingVertical: 8,
   },
   switchModeText: {
     fontSize: 13,
-    fontWeight: "700",
-    color: "#78350F", // Warm amber brown
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
+    textDecorationLine: "underline",
   },
 });

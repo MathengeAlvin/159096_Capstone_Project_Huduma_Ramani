@@ -2,6 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.db.models import Q
+from datetime import datetime, timezone
+import re
 
 from .models import Service, Provider, Rating, InteractionEvent
 from .serializers import (
@@ -11,6 +13,7 @@ from .serializers import (
     InteractionEventSerializer,
 )
 from .ml_engine import engine
+from .firebase_client import get_firestore_client
 
 
 class ServiceViewSet(viewsets.ModelViewSet):
@@ -151,6 +154,131 @@ def submit_rating_view(request):
         "service_id": service_id,
         "new_rating": avg_rating,
         "total_reviews": service.review_count,
+    })
+
+
+@api_view(["POST"])
+def register_or_login_user_view(request):
+    """
+    Registers or logs in a resident or provider user, persisting their profile
+    in Google Cloud Firestore ('users' collection).
+    """
+    data = request.data
+    name = data.get("name", "").strip() or "Community Resident"
+    email = data.get("email", "").strip().lower()
+    settlement = data.get("settlement", "Kibera")
+    role = data.get("role", "resident")  # "resident" or "provider"
+    interests = data.get("interests", [])
+
+    if not email:
+        return Response(
+            {"error": "Email is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Sanitize email for a reliable Firestore doc ID
+    clean_id = re.sub(r"[^a-zA-Z0-9_-]", "_", email)
+    doc_id = f"{role}_{clean_id}"
+
+    db = get_firestore_client()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    stored_in_firestore = False
+
+    user_payload = {
+        "id": doc_id,
+        "name": name,
+        "email": email,
+        "role": role,
+        "settlement": settlement,
+        "interests": interests,
+        "savedServices": [],
+        "last_login": now_iso,
+    }
+
+    if db:
+        try:
+            doc_ref = db.collection("users").document(doc_id)
+            doc_snap = doc_ref.get()
+
+            if doc_snap.exists:
+                existing_data = doc_snap.to_dict() or {}
+                # Preserve existing interests if not explicitly provided
+                if not interests and existing_data.get("interests"):
+                    user_payload["interests"] = existing_data["interests"]
+                if existing_data.get("savedServices"):
+                    user_payload["savedServices"] = existing_data["savedServices"]
+                user_payload["created_at"] = existing_data.get("created_at", now_iso)
+                user_payload["updated_at"] = now_iso
+                doc_ref.set(user_payload, merge=True)
+            else:
+                user_payload["created_at"] = now_iso
+                user_payload["updated_at"] = now_iso
+                doc_ref.set(user_payload)
+
+            stored_in_firestore = True
+        except Exception as e:
+            print(f"[Firestore Sync Warning] Error persisting user {doc_id}: {e}")
+
+    # If provider, ensure Provider record exists in Django DB as well
+    if role == "provider":
+        Provider.objects.get_or_create(
+            provider_id=doc_id,
+            defaults={
+                "name": name,
+                "email": email,
+                "settlement": settlement,
+                "verified": True,
+            },
+        )
+
+    return Response({
+        "status": "success",
+        "stored_in_firestore": stored_in_firestore,
+        "user": user_payload,
+    }, status=status.HTTP_200_OK if stored_in_firestore else status.HTTP_201_CREATED)
+
+
+@api_view(["POST", "PATCH"])
+def update_user_interests_view(request):
+    """
+    Updates resident interest categories in Firestore after completing the
+    onboarding questionnaire, directly informing the recommendation pipeline.
+    """
+    data = request.data
+    user_id = data.get("user_id", "")
+    email = data.get("email", "").strip().lower()
+    interests = data.get("interests", [])
+
+    if not user_id and email:
+        clean_id = re.sub(r"[^a-zA-Z0-9_-]", "_", email)
+        user_id = f"resident_{clean_id}"
+
+    if not user_id:
+        return Response(
+            {"error": "user_id or email is required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    db = get_firestore_client()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    stored_in_firestore = False
+
+    if db:
+        try:
+            doc_ref = db.collection("users").document(user_id)
+            doc_ref.set({
+                "interests": interests,
+                "updated_at": now_iso,
+            }, merge=True)
+            stored_in_firestore = True
+        except Exception as e:
+            print(f"[Firestore Sync Warning] Failed to update interests for {user_id}: {e}")
+
+    return Response({
+        "status": "success",
+        "stored_in_firestore": stored_in_firestore,
+        "user_id": user_id,
+        "interests": interests,
     })
 
 

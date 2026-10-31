@@ -17,11 +17,14 @@ import {
   fetchLiveRecommendations,
   submitLiveRating,
   fetchAllServicesForMap,
+  registerOrLoginResident,
+  syncUserInterestsToFirestore,
 } from "./src/services/api";
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isOnboarded, setIsOnboarded] = useState(true);
+  // Start unauthenticated so user can Register or Log In
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isOnboarded, setIsOnboarded] = useState(false);
   const [currentUser, setCurrentUser] = useState<ResidentUser>(INITIAL_USER);
   const [activeTab, setActiveTab] = useState<MainTab>("home");
   const [selectedService, setSelectedService] = useState<MobileService | null>(null);
@@ -37,10 +40,12 @@ export default function App() {
   const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load recommendations and all map facilities on mount or when user settlement changes
+  // Load recommendations and map facilities when user authenticates and on settlement changes
   useEffect(() => {
-    loadRecommendations(currentUser.settlement, currentUser.interests);
-  }, [currentUser.settlement]);
+    if (isAuthenticated && isOnboarded) {
+      loadRecommendations(currentUser.settlement, currentUser.interests);
+    }
+  }, [isAuthenticated, isOnboarded, currentUser.settlement]);
 
   const loadRecommendations = async (
     settlement: "Kibera" | "Mathare",
@@ -67,15 +72,20 @@ export default function App() {
     loadRecommendations(newSettlement, currentUser.interests);
   };
 
-  const handleAuthSuccess = (user: ResidentUser, isNewUser: boolean) => {
-    setCurrentUser(user);
+  const handleAuthSuccess = async (user: ResidentUser, isNewUser: boolean) => {
+    // 1. Persist or fetch resident profile in Cloud Firestore via Django backend
+    const syncRes = await registerOrLoginResident(user);
+    const activeUser = syncRes.user;
+    setCurrentUser(activeUser);
     setIsAuthenticated(true);
-    if (isNewUser) {
+
+    if (isNewUser || !activeUser.interests || activeUser.interests.length === 0) {
+      // New account or no interests selected -> trigger questionnaire
       setIsOnboarded(false);
     } else {
       setIsOnboarded(true);
       setActiveTab("home");
-      loadRecommendations(user.settlement, user.interests);
+      loadRecommendations(activeUser.settlement, activeUser.interests);
     }
   };
 
@@ -88,7 +98,10 @@ export default function App() {
     setIsOnboarded(true);
     setActiveTab("home");
 
-    // Re-query the hybrid ML engine with cold-start interests
+    // 1. Persist selected interest categories directly into Cloud Firestore
+    syncUserInterestsToFirestore(updatedUser.id, updatedUser.email, selectedInterests);
+
+    // 2. Query the hybrid ML recommendation engine with the selected questionnaire interests
     loadRecommendations(updatedUser.settlement, selectedInterests);
   };
 
@@ -186,6 +199,7 @@ export default function App() {
             onEditInterests={() => setIsOnboarded(false)}
             onLogout={() => {
               setIsAuthenticated(false);
+              setIsOnboarded(false);
               setSelectedService(null);
             }}
           />
