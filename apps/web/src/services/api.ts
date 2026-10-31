@@ -229,3 +229,37 @@ export async function deleteServiceListing(serviceId: string): Promise<boolean> 
   }
 }
 
+
+
+/**
+ * Registers or logs in a provider organization, syncing their account to Cloud Firestore.
+ */
+export async function registerOrLoginProvider(payload: {
+  name: string;
+  email: string;
+  settlement: "Kibera" | "Mathare";
+}): Promise<{ providerId: string; storedInFirestore: boolean }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        settlement: payload.settlement,
+        role: "provider",
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        providerId: data.user.id,
+        storedInFirestore: data.stored_in_firestore ?? false,
+      };
+    }
+  } catch (err) {
+    console.warn("[Huduma Web API] Provider auth sync to Firestore offline:", err);
+  }
+  const cleanId = payload.email.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
+  return { providerId: `org-${cleanId}`, storedInFirestore: false };
+}

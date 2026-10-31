@@ -6,6 +6,8 @@ from .views import (
     recommend_services_view,
     submit_rating_view,
     health_check_view,
+    register_or_login_user_view,
+    update_user_interests_view,
 )
 
 router = DefaultRouter()
@@ -14,6 +16,8 @@ router.register(r"providers", ProviderViewSet, basename="provider")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("auth/register/", register_or_login_user_view, name="auth_register"),
+    path("auth/interests/", update_user_interests_view, name="auth_interests"),
     path("recommendations/", recommend_services_view, name="recommendations"),
     path("ratings/", submit_rating_view, name="ratings"),
     path("health/", health_check_view, name="health_check"),
