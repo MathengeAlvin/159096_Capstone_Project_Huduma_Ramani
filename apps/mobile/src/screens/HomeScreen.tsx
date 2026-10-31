@@ -8,8 +8,11 @@ import {
   SafeAreaView,
   Dimensions,
   ActivityIndicator,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileService, ResidentUser } from "../types";
 import { MapViewComponent } from "../components/MapViewComponent";
 import { GlovoTheme } from "../theme";
@@ -40,11 +43,14 @@ export function HomeScreen({
   isLoading = false,
   onRefresh,
 }: HomeScreenProps) {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Glovo Yellow Top Search & Header Bar */}
-        <View style={styles.headerWrapper}>
+        <View style={[styles.headerWrapper, { paddingTop: topInset + 6 }]}>
           <View style={styles.greetingRow}>
             <View>
               <Text style={styles.greetingSub}>DISCOVER SERVICES IN</Text>
@@ -177,7 +183,7 @@ export function HomeScreen({
           </ScrollView>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

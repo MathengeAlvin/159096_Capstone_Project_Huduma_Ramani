@@ -7,9 +7,12 @@ import {
   FlatList,
   StyleSheet,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { MobileService, ServiceCategory } from "../types";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MobileService } from "../types";
 import { ALL_CATEGORIES } from "../data/mockServices";
 import { GlovoTheme } from "../theme";
 
@@ -24,6 +27,9 @@ export function SearchScreen({
   onSelectService,
   initialQuery = "",
 }: SearchScreenProps) {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
@@ -39,12 +45,12 @@ export function SearchScreen({
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
       <View style={styles.container}>
         {/* Top Search Bar (Glovo Pill) */}
         <View style={styles.searchHeader}>
           <View style={styles.searchInputWrapper}>
-            <Ionicons name="search" size={18} color={GlovoTheme.colors.textDark} style={styles.searchIcon} />
+            <Ionicons name="search" size={19} color={GlovoTheme.colors.textDark} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               value={query}
@@ -142,14 +148,16 @@ export function SearchScreen({
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={40} color={GlovoTheme.colors.primary} />
+              <Ionicons name="search" size={40} color={GlovoTheme.colors.borderYellow} />
               <Text style={styles.emptyTitle}>No facilities found</Text>
-              <Text style={styles.emptyText}>Try searching for another keyword or category.</Text>
+              <Text style={styles.emptyText}>
+                Try adjusting your search keywords or clearing category filters.
+              </Text>
             </View>
           }
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -164,32 +172,33 @@ const styles = StyleSheet.create({
   },
   searchHeader: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 10,
     backgroundColor: GlovoTheme.colors.white,
   },
   searchInputWrapper: {
-    height: 46,
+    height: 48,
     borderRadius: GlovoTheme.borderRadius.pill,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     backgroundColor: GlovoTheme.colors.background,
     borderWidth: 1.5,
     borderColor: GlovoTheme.colors.borderYellow,
     ...GlovoTheme.shadows.soft,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
     color: GlovoTheme.colors.textDark,
     fontWeight: "600",
+    paddingVertical: 8,
   },
   categoryScrollContainer: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: GlovoTheme.colors.borderLight,
     backgroundColor: GlovoTheme.colors.white,
@@ -199,8 +208,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    paddingHorizontal: 13,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderWidth: 1,
     borderColor: GlovoTheme.colors.border,
     borderRadius: GlovoTheme.borderRadius.pill,
@@ -211,7 +220,7 @@ const styles = StyleSheet.create({
     borderColor: GlovoTheme.colors.primary,
   },
   chipText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: GlovoTheme.colors.textSecondary,
   },
@@ -220,7 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   resultsCountBar: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 8,
   },
   resultsCountText: {
@@ -235,39 +244,41 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 16,
     paddingBottom: 24,
-    gap: 10,
+    gap: 12,
   },
   card: {
     flexDirection: "row",
-    borderRadius: GlovoTheme.borderRadius.md,
+    borderRadius: GlovoTheme.borderRadius.lg,
     backgroundColor: GlovoTheme.colors.white,
     borderWidth: 1,
-    borderColor: GlovoTheme.colors.border,
-    padding: 12,
-    gap: 12,
+    borderColor: GlovoTheme.colors.borderLight,
+    padding: 14,
+    gap: 14,
     alignItems: "center",
     ...GlovoTheme.shadows.soft,
   },
   cardThumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: GlovoTheme.borderRadius.sm,
+    width: 58,
+    height: 58,
+    borderRadius: 14,
     backgroundColor: GlovoTheme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderYellow,
   },
   cardDetails: {
     flex: 1,
     justifyContent: "center",
   },
   serviceName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
     color: GlovoTheme.colors.textDark,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   categoryDistanceRow: {
-    fontSize: 11,
+    fontSize: 12,
     color: GlovoTheme.colors.textSecondary,
     fontWeight: "600",
   },
@@ -281,7 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FEF3C7",
-    paddingHorizontal: 5,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: GlovoTheme.borderRadius.xs,
     gap: 3,
@@ -292,12 +303,12 @@ const styles = StyleSheet.create({
     color: "#92400E",
   },
   reviewCount: {
-    fontSize: 10,
+    fontSize: 11,
     color: GlovoTheme.colors.textMuted,
     fontWeight: "500",
   },
   settlementTag: {
-    fontSize: 10,
+    fontSize: 11,
     color: GlovoTheme.colors.textMuted,
     fontWeight: "600",
   },

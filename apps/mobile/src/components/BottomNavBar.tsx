@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MainTab } from "../types";
 import { GlovoTheme } from "../theme";
 
@@ -11,6 +12,9 @@ interface BottomNavBarProps {
 }
 
 export function BottomNavBar({ activeTab, onTabChange, savedCount = 0 }: BottomNavBarProps) {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === "ios" ? 20 : 8);
+
   const tabs: { id: MainTab; label: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }[] = [
     { id: "home", label: "Home", icon: "home-outline", activeIcon: "home" },
     { id: "search", label: "Search", icon: "search-outline", activeIcon: "search" },
@@ -19,7 +23,7 @@ export function BottomNavBar({ activeTab, onTabChange, savedCount = 0 }: BottomN
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: bottomPadding, height: 56 + bottomPadding }]}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -54,13 +58,11 @@ export function BottomNavBar({ activeTab, onTabChange, savedCount = 0 }: BottomN
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    height: Platform.OS === "ios" ? 82 : 66,
     borderTopWidth: 1,
     borderTopColor: GlovoTheme.colors.borderLight,
     backgroundColor: GlovoTheme.colors.white,
     alignItems: "center",
     justifyContent: "space-around",
-    paddingBottom: Platform.OS === "ios" ? 20 : 8,
     paddingTop: 8,
     ...GlovoTheme.shadows.soft,
   },
