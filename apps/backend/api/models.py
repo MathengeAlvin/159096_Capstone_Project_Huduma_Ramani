@@ -90,3 +90,38 @@ class InteractionEvent(models.Model):
 
     def __str__(self):
         return f"{self.user_id} - {self.event_type} - {self.service.service_id}"
+
+
+class Application(models.Model):
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+        ("REJECTED", "Rejected"),
+        ("COMPLETED", "Completed"),
+    ]
+
+    application_id = models.CharField(max_length=64, unique=True, primary_key=True)
+    resident_id = models.CharField(max_length=64)
+    applicant_name = models.CharField(max_length=255)
+    applicant_phone = models.CharField(max_length=64, blank=True, null=True)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="applications")
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="applications")
+    service_title = models.CharField(max_length=255, blank=True, null=True)
+    provider_name = models.CharField(max_length=255, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="PENDING")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.application_id:
+            import uuid
+            self.application_id = f"app_{uuid.uuid4().hex[:8]}"
+        if not self.service_title and self.service:
+            self.service_title = self.service.title
+        if not self.provider_name and self.provider:
+            self.provider_name = self.provider.name
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.applicant_name} -> {self.service_title} [{self.status}]"

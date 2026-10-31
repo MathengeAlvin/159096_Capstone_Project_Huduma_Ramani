@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Service, Provider, Rating, InteractionEvent
+from .models import Service, Provider, Rating, InteractionEvent, Application
 
 
 class ProviderSerializer(serializers.ModelSerializer):
@@ -46,3 +46,28 @@ class InteractionEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = InteractionEvent
         fields = "__all__"
+
+
+class ApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Application
+        fields = [
+            "application_id",
+            "resident_id",
+            "applicant_name",
+            "applicant_phone",
+            "service",
+            "provider",
+            "service_title",
+            "provider_name",
+            "notes",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        extra_kwargs = {
+            "application_id": {"required": False},
+            "service_title": {"required": False},
+            "provider_name": {"required": False},
+            "provider": {"required": False},
+        }

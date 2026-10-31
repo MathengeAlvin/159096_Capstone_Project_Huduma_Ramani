@@ -6,8 +6,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MobileService } from "../types";
 import { GlovoTheme } from "../theme";
 
@@ -22,8 +25,11 @@ export function SavedScreen({
   onSelectService,
   onRemoveBookmark,
 }: SavedScreenProps) {
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
       <View style={styles.container}>
         {/* Header Title */}
         <View style={styles.header}>
@@ -83,7 +89,7 @@ export function SavedScreen({
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconCircle}>
-                <Ionicons name="bookmark-outline" size={36} color={GlovoTheme.colors.primary} />
+                <Ionicons name="bookmark-outline" size={40} color={GlovoTheme.colors.primary} />
               </View>
               <Text style={styles.emptyTitle}>No saved services yet</Text>
               <Text style={styles.emptySubtext}>
@@ -93,7 +99,7 @@ export function SavedScreen({
           }
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -108,72 +114,77 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 14,
+    paddingTop: 10,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: GlovoTheme.colors.borderLight,
+    backgroundColor: GlovoTheme.colors.white,
   },
   headerBadge: {
     backgroundColor: GlovoTheme.colors.primaryLight,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: GlovoTheme.borderRadius.pill,
     alignSelf: "flex-start",
-    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderYellow,
+    marginBottom: 8,
   },
   headerBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "900",
     color: "#78350F",
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "900",
     color: GlovoTheme.colors.textDark,
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: GlovoTheme.colors.textSecondary,
-    marginTop: 2,
-    fontWeight: "500",
+    marginTop: 3,
+    fontWeight: "600",
   },
   listContainer: {
     paddingHorizontal: 16,
     paddingVertical: 14,
-    gap: 10,
+    gap: 12,
   },
   card: {
     flexDirection: "row",
-    borderRadius: GlovoTheme.borderRadius.md,
+    borderRadius: GlovoTheme.borderRadius.lg,
     backgroundColor: GlovoTheme.colors.white,
     borderWidth: 1,
     borderColor: GlovoTheme.colors.border,
-    padding: 12,
+    padding: 14,
     gap: 12,
     alignItems: "center",
     ...GlovoTheme.shadows.soft,
   },
   thumbnail: {
-    width: 56,
-    height: 56,
-    borderRadius: GlovoTheme.borderRadius.sm,
+    width: 58,
+    height: 58,
+    borderRadius: GlovoTheme.borderRadius.md,
     backgroundColor: GlovoTheme.colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: GlovoTheme.colors.borderYellow,
   },
   cardInfo: {
     flex: 1,
     justifyContent: "center",
   },
   serviceName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
     color: GlovoTheme.colors.textDark,
   },
   categoryName: {
-    fontSize: 11,
+    fontSize: 12,
     color: GlovoTheme.colors.textSecondary,
     marginTop: 2,
     fontWeight: "500",
@@ -185,39 +196,46 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   starText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     color: "#92400E",
   },
   bookmarkButton: {
-    padding: 6,
+    padding: 8,
     borderRadius: GlovoTheme.borderRadius.pill,
     backgroundColor: GlovoTheme.colors.background,
   },
   emptyContainer: {
-    paddingVertical: 60,
+    flex: 1,
+    minHeight: 380,
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 30,
+    paddingHorizontal: 36,
   },
   emptyIconCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: GlovoTheme.colors.primaryLight,
+    borderWidth: 1.5,
+    borderColor: GlovoTheme.colors.borderYellow,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: 16,
+    ...GlovoTheme.shadows.glowYellow,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "900",
     color: GlovoTheme.colors.textDark,
-    marginBottom: 6,
+    marginBottom: 8,
+    textAlign: "center",
   },
   emptySubtext: {
-    fontSize: 12,
+    fontSize: 13,
     color: GlovoTheme.colors.textSecondary,
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 20,
+    maxWidth: 280,
   },
 });

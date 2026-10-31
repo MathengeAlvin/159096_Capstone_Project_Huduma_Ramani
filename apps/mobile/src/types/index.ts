@@ -33,6 +33,24 @@ export interface ResidentUser {
   email: string;
   settlement: "Kibera" | "Mathare";
   interests: ServiceCategory[];
+  savedServices?: string[];
 }
 
 export type MainTab = "home" | "search" | "saved" | "profile";
+
+
+export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+
+export interface MobileApplication {
+  id: string;
+  residentId: string;
+  applicantName: string;
+  applicantPhone: string;
+  serviceId: string;
+  serviceTitle: string;
+  providerId: string;
+  providerName: string;
+  notes: string;
+  status: ApplicationStatus;
+  date: string;
+}

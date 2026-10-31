@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { ResidentUser, MobileService, MainTab, ServiceCategory } from "./src/types";
+import {
+  ResidentUser,
+  MobileService,
+  MainTab,
+  ServiceCategory,
+  MobileApplication,
+} from "./src/types";
 import { INITIAL_USER, MOCK_SERVICES } from "./src/data/mockServices";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
@@ -17,8 +23,13 @@ import {
   fetchLiveRecommendations,
   submitLiveRating,
   fetchAllServicesForMap,
-  registerOrLoginResident,
+  loginResident,
+  registerResident,
   syncUserInterestsToFirestore,
+  fetchResidentApplications,
+  submitServiceApplication,
+  syncUserBookmarksToFirestore,
+  fetchUserBookmarksFromFirestore,
 } from "./src/services/api";
 
 export default function App() {
@@ -29,21 +40,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<MainTab>("home");
   const [selectedService, setSelectedService] = useState<MobileService | null>(null);
 
-  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([
-    "srv-002",
-    "srv-003",
-    "srv-005",
-  ]);
+  // Default to empty array - accurately tracks user-saved facilities
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
   const [services, setServices] = useState<MobileService[]>(MOCK_SERVICES);
   const [mapServices, setMapServices] = useState<MobileService[]>(MOCK_SERVICES);
+  const [userApplications, setUserApplications] = useState<MobileApplication[]>([]);
   const [isLiveApi, setIsLiveApi] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load recommendations and map facilities when user authenticates and on settlement changes
+  // Load recommendations, map facilities, and applications on auth and settlement change
   useEffect(() => {
     if (isAuthenticated && isOnboarded) {
       loadRecommendations(currentUser.settlement, currentUser.interests);
+      loadUserApplications(currentUser.id);
     }
   }, [isAuthenticated, isOnboarded, currentUser.settlement]);
 
@@ -67,26 +77,71 @@ export default function App() {
     }
   };
 
+  const loadUserApplications = async (userId: string) => {
+    try {
+      const res = await fetchResidentApplications(userId);
+      setUserApplications(res.applications);
+    } catch {
+      setUserApplications([]);
+    }
+  };
+
   const handleSettlementChange = (newSettlement: "Kibera" | "Mathare") => {
     setCurrentUser((prev) => ({ ...prev, settlement: newSettlement }));
     loadRecommendations(newSettlement, currentUser.interests);
   };
 
-  const handleAuthSuccess = async (user: ResidentUser, isNewUser: boolean) => {
-    // 1. Persist or fetch resident profile in Cloud Firestore via Django backend
-    const syncRes = await registerOrLoginResident(user);
-    const activeUser = syncRes.user;
-    setCurrentUser(activeUser);
-    setIsAuthenticated(true);
-
-    if (isNewUser || !activeUser.interests || activeUser.interests.length === 0) {
-      // New account or no interests selected -> trigger questionnaire
+  const handleRegister = async (data: {
+    name: string;
+    email: string;
+    password: string;
+    settlement: "Kibera" | "Mathare";
+  }): Promise<{ success: boolean; error?: string }> => {
+    const res = await registerResident(data);
+    if (res.success && res.user) {
+      setCurrentUser(res.user);
+      setIsAuthenticated(true);
+      // New account -> trigger questionnaire to select interests
       setIsOnboarded(false);
-    } else {
-      setIsOnboarded(true);
-      setActiveTab("home");
-      loadRecommendations(activeUser.settlement, activeUser.interests);
+      if (res.user.savedServices && Array.isArray(res.user.savedServices)) {
+        setBookmarkedIds(res.user.savedServices);
+      }
+      return { success: true };
     }
+    return { success: false, error: res.error || "Registration failed." };
+  };
+
+  const handleLogin = async (data: {
+    email: string;
+    password: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    const res = await loginResident(data);
+    if (res.success && res.user) {
+      const activeUser = res.user;
+      setCurrentUser(activeUser);
+      setIsAuthenticated(true);
+
+      // Restore saved organizations accurately from Cloud Firestore
+      if (activeUser.savedServices && Array.isArray(activeUser.savedServices)) {
+        setBookmarkedIds(activeUser.savedServices);
+      } else {
+        fetchUserBookmarksFromFirestore(activeUser.id, activeUser.email).then((saved) => {
+          if (saved && saved.length > 0) setBookmarkedIds(saved);
+        });
+      }
+
+      if (!activeUser.interests || activeUser.interests.length === 0) {
+        // No interests chosen yet -> questionnaire
+        setIsOnboarded(false);
+      } else {
+        setIsOnboarded(true);
+        setActiveTab("home");
+        loadRecommendations(activeUser.settlement, activeUser.interests);
+        loadUserApplications(activeUser.id);
+      }
+      return { success: true };
+    }
+    return { success: false, error: res.error || "Login failed." };
   };
 
   const handleOnboardingComplete = (selectedInterests: ServiceCategory[]) => {
@@ -103,42 +158,59 @@ export default function App() {
 
     // 2. Query the hybrid ML recommendation engine with the selected questionnaire interests
     loadRecommendations(updatedUser.settlement, selectedInterests);
+    loadUserApplications(updatedUser.id);
   };
 
   const handleToggleBookmark = (serviceId: string) => {
-    if (bookmarkedIds.includes(serviceId)) {
-      setBookmarkedIds(bookmarkedIds.filter((id) => id !== serviceId));
-    } else {
-      setBookmarkedIds([...bookmarkedIds, serviceId]);
+    const updated = bookmarkedIds.includes(serviceId)
+      ? bookmarkedIds.filter((id) => id !== serviceId)
+      : [...bookmarkedIds, serviceId];
+    setBookmarkedIds(updated);
+
+    // Persist bookmarked organizations to Cloud Firestore immediately under resident profile
+    if (currentUser?.id) {
+      syncUserBookmarksToFirestore(currentUser.id, currentUser.email, updated);
     }
   };
 
   const handleRateService = async (serviceId: string, rating: number) => {
-    // 1. Submit to Django Bayesian rating endpoint
     await submitLiveRating(serviceId, rating, currentUser.id);
-
-    // 2. Update local state
-    setServices((prev) =>
-      prev.map((s) => {
-        if (s.id === serviceId) {
-          const newReviewCount = s.reviewCount + 1;
-          const newRating = (s.rating * s.reviewCount + rating) / newReviewCount;
-          return {
-            ...s,
-            rating: parseFloat(newRating.toFixed(1)),
-            reviewCount: newReviewCount,
-          };
-        }
-        return s;
-      })
-    );
   };
 
-  // Screen routing
+  const handleApplyForService = async (
+    serviceId: string,
+    phone: string,
+    notes: string
+  ): Promise<boolean> => {
+    const res = await submitServiceApplication({
+      residentId: currentUser.id,
+      applicantName: currentUser.name,
+      applicantPhone: phone,
+      serviceId,
+      notes,
+    });
+
+    if (res.success && res.application) {
+      setUserApplications((prev) => [
+        res.application!,
+        ...prev.filter((a) => a.id !== res.application!.id),
+      ]);
+      return true;
+    }
+    return false;
+  };
+
+  // Derive accurately saved facilities from actual loaded services list
+  const savedServicesList = useMemo(() => {
+    const all = [...services, ...mapServices];
+    const unique = Array.from(new Map(all.map((s) => [s.id, s])).values());
+    return unique.filter((s) => bookmarkedIds.includes(s.id));
+  }, [services, mapServices, bookmarkedIds]);
+
   let screenContent = null;
 
   if (!isAuthenticated) {
-    screenContent = <AuthScreen onAuthSuccess={handleAuthSuccess} />;
+    screenContent = <AuthScreen onRegister={handleRegister} onLogin={handleLogin} />;
   } else if (!isOnboarded) {
     screenContent = (
       <OnboardingScreen
@@ -147,13 +219,20 @@ export default function App() {
       />
     );
   } else if (selectedService) {
+    const existingApp = userApplications.find(
+      (a) => a.serviceId === selectedService.id
+    );
+
     screenContent = (
       <ServiceDetailScreen
         service={selectedService}
+        user={currentUser}
         onBack={() => setSelectedService(null)}
         isBookmarked={bookmarkedIds.includes(selectedService.id)}
         onToggleBookmark={handleToggleBookmark}
         onRateService={handleRateService}
+        existingApplication={existingApp}
+        onApplyForService={handleApplyForService}
       />
     );
   } else {
@@ -169,9 +248,10 @@ export default function App() {
             onSettlementChange={handleSettlementChange}
             isLive={isLiveApi}
             isLoading={isLoading}
-            onRefresh={() =>
-              loadRecommendations(currentUser.settlement, currentUser.interests)
-            }
+            onRefresh={() => {
+              loadRecommendations(currentUser.settlement, currentUser.interests);
+              loadUserApplications(currentUser.id);
+            }}
           />
         );
         break;
@@ -186,7 +266,7 @@ export default function App() {
       case "saved":
         screenContent = (
           <SavedScreen
-            savedServices={services.filter((s) => bookmarkedIds.includes(s.id))}
+            savedServices={savedServicesList}
             onSelectService={setSelectedService}
             onRemoveBookmark={handleToggleBookmark}
           />
@@ -196,11 +276,21 @@ export default function App() {
         screenContent = (
           <ProfileScreen
             user={currentUser}
+            applications={userApplications}
+            onRefreshApplications={() => loadUserApplications(currentUser.id)}
+            onSelectServiceById={(serviceId) => {
+              const all = [...services, ...mapServices];
+              const target = all.find((s) => s.id === serviceId);
+              if (target) {
+                setSelectedService(target);
+              }
+            }}
             onEditInterests={() => setIsOnboarded(false)}
             onLogout={() => {
               setIsAuthenticated(false);
               setIsOnboarded(false);
               setSelectedService(null);
+              setBookmarkedIds([]);
             }}
           />
         );
@@ -222,7 +312,7 @@ export default function App() {
               setSelectedService(null);
               setActiveTab(tab);
             }}
-            savedCount={bookmarkedIds.length}
+            savedCount={savedServicesList.length}
           />
         )}
       </View>

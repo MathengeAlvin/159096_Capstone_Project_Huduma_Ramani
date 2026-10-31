@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ServiceApplication, ApplicationStatus } from "../types";
-import { X } from "lucide-react";
+import { X, Inbox } from "lucide-react";
 
 interface RecentApplicationsProps {
   applications: ServiceApplication[];
@@ -62,40 +62,52 @@ export function RecentApplications({
         </span>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b-2 border-neutral-100 text-[11px] font-black uppercase tracking-wider text-[#1E1E1E]">
-              <th className="pb-3 pr-4">Applicant Name</th>
-              <th className="pb-3 pr-4">Service Requested</th>
-              <th className="pb-3 pr-4">Date</th>
-              <th className="pb-3 text-right">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {applications.map((app) => (
-              <tr
-                key={app.id}
-                onClick={() => setSelectedApp(app)}
-                className="hover:bg-[#FFFDF7] transition-colors cursor-pointer group"
-              >
-                <td className="py-3.5 pr-4 font-bold text-[#1E1E1E] group-hover:text-amber-700">
-                  {app.applicantName}
-                </td>
-                <td className="py-3.5 pr-4 text-neutral-700 font-medium text-xs">
-                  {app.serviceRequested}
-                </td>
-                <td className="py-3.5 pr-4 font-mono text-xs text-neutral-500">
-                  {app.date}
-                </td>
-                <td className="py-3.5 text-right">
-                  {getStatusBadge(app.status)}
-                </td>
+      {applications.length === 0 ? (
+        <div className="py-12 px-4 text-center border-2 border-dashed border-neutral-200 rounded-2xl bg-[#FAFAFA]">
+          <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 mx-auto mb-3 flex items-center justify-center text-amber-600">
+            <Inbox className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-black text-[#1E1E1E]">No Beneficiary Applications Yet</h4>
+          <p className="text-xs text-neutral-500 max-w-sm mx-auto mt-1">
+            When informal settlement residents apply for this provider&apos;s services from the mobile app, their intake requests will appear here for review and approval.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b-2 border-neutral-100 text-[11px] font-black uppercase tracking-wider text-[#1E1E1E]">
+                <th className="pb-3 pr-4">Applicant Name</th>
+                <th className="pb-3 pr-4">Service Requested</th>
+                <th className="pb-3 pr-4">Date</th>
+                <th className="pb-3 text-right">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {applications.map((app) => (
+                <tr
+                  key={app.id}
+                  onClick={() => setSelectedApp(app)}
+                  className="hover:bg-[#FFFDF7] transition-colors cursor-pointer group"
+                >
+                  <td className="py-3.5 pr-4 font-bold text-[#1E1E1E] group-hover:text-amber-700">
+                    {app.applicantName}
+                  </td>
+                  <td className="py-3.5 pr-4 text-neutral-700 font-medium text-xs">
+                    {app.serviceRequested}
+                  </td>
+                  <td className="py-3.5 pr-4 font-mono text-xs text-neutral-500">
+                    {app.date}
+                  </td>
+                  <td className="py-3.5 text-right">
+                    {getStatusBadge(app.status)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Quick View / Status Modal */}
       {selectedApp && (
@@ -105,7 +117,7 @@ export function RecentApplications({
               <h4 className="text-lg font-black text-[#1E1E1E]">Application Details</h4>
               <button
                 onClick={() => setSelectedApp(null)}
-                className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-500 hover:text-black hover:bg-neutral-100 transition-colors"
+                className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-500 hover:text-black hover:bg-neutral-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -124,9 +136,13 @@ export function RecentApplications({
                 <span className="text-xs font-bold uppercase text-neutral-500 block">Submission Date</span>
                 <span className="font-mono text-xs text-neutral-600">{selectedApp.date}</span>
               </div>
+              <div>
+                <span className="text-xs font-bold uppercase text-neutral-500 block">Current Status</span>
+                <div className="mt-1">{getStatusBadge(selectedApp.status)}</div>
+              </div>
               {selectedApp.notes && (
                 <div>
-                  <span className="text-xs font-bold uppercase text-neutral-500 block">Intake Notes</span>
+                  <span className="text-xs font-bold uppercase text-neutral-500 block">Intake Notes / Contact</span>
                   <p className="text-xs text-neutral-700 bg-[#FFFBEB] p-3 rounded-xl border border-[#FDE68A] mt-1">
                     {selectedApp.notes}
                   </p>
@@ -134,30 +150,30 @@ export function RecentApplications({
               )}
             </div>
 
-            <div className="pt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase text-neutral-600">Change Status:</span>
-              <div className="flex gap-2">
+            <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase text-neutral-600 self-start sm:self-auto">Action:</span>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => {
                     onUpdateStatus?.(selectedApp.id, "APPROVED");
                     setSelectedApp({ ...selectedApp, status: "APPROVED" });
                   }}
-                  className="px-3.5 py-1.5 rounded-full border border-[#00A082]/30 bg-[#E6F6F3] hover:bg-[#D5EFEA] text-[#00A082] text-xs font-black uppercase transition-all"
+                  className="px-3.5 py-1.5 rounded-full border border-[#00A082]/40 bg-[#E6F6F3] hover:bg-[#D5EFEA] text-[#00A082] text-xs font-black uppercase transition-all cursor-pointer"
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => {
-                    onUpdateStatus?.(selectedApp.id, "COMPLETED");
-                    setSelectedApp({ ...selectedApp, status: "COMPLETED" });
+                    onUpdateStatus?.(selectedApp.id, "REJECTED");
+                    setSelectedApp({ ...selectedApp, status: "REJECTED" });
                   }}
-                  className="px-3.5 py-1.5 rounded-full border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-black uppercase transition-all"
+                  className="px-3.5 py-1.5 rounded-full border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black uppercase transition-all cursor-pointer"
                 >
-                  Complete
+                  Deny / Reject
                 </button>
                 <button
                   onClick={() => setSelectedApp(null)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#FFC244] hover:bg-[#F5B42E] text-[#1E1E1E] text-xs font-black uppercase transition-all"
+                  className="px-3.5 py-1.5 rounded-full bg-[#FFC244] hover:bg-[#F5B42E] text-[#1E1E1E] text-xs font-black uppercase transition-all cursor-pointer"
                 >
                   Close
                 </button>

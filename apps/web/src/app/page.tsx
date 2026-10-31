@@ -21,6 +21,9 @@ import {
   updateServiceListing,
   deleteServiceListing,
   registerOrLoginProvider,
+  loginProvider,
+  fetchProviderApplications,
+  updateApplicationStatus,
 } from "../services/api";
 
 export default function ProviderPortalApp() {
@@ -29,53 +32,137 @@ export default function ProviderPortalApp() {
   const [activeTab, setActiveTab] = useState<NavTab>("dashboard");
   const [organization, setOrganization] = useState(initialOrganization);
   const [listings, setListings] = useState<ServiceListing[]>(initialListings);
-  const [applications, setApplications] = useState<ServiceApplication[]>(initialApplications);
+  // Default to empty array: if nobody has applied, nothing will be displayed
+  const [applications, setApplications] = useState<ServiceApplication[]>([]);
   const [isLiveApi, setIsLiveApi] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load provider listings from live Django REST API on mount or org change
+  // Restore authenticated session from localStorage on initial load
   useEffect(() => {
-    if (isAuthenticated) {
-      loadListings();
-    }
-  }, [organization.id, isAuthenticated]);
-
-  const loadListings = async () => {
-    setIsLoading(true);
     try {
-      const res = await fetchProviderListings(organization.id);
-      setListings(res.listings);
-      setIsLiveApi(res.isLive);
+      const saved = localStorage.getItem("huduma_provider_session");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.id) {
+          setOrganization(parsed);
+          setIsAuthenticated(true);
+          loadDashboardData(parsed.id);
+        }
+      }
+    } catch {
+      // LocalStorage not available or parse failure
+    }
+  }, []);
+
+  const loadDashboardData = async (targetOrgId?: string, isSilent = false) => {
+    const orgId = targetOrgId || organization.id;
+    if (!orgId || orgId === "#40192") return;
+    if (!isSilent) setIsLoading(true);
+    try {
+      const [listingsRes, appsRes] = await Promise.all([
+        fetchProviderListings(orgId),
+        fetchProviderApplications(orgId),
+      ]);
+      setListings(listingsRes.listings);
+      setApplications(appsRes.applications);
+      setIsLiveApi(listingsRes.isLive || appsRes.isLive);
     } catch {
       setIsLiveApi(false);
     } finally {
-      setIsLoading(false);
+      if (!isSilent) setIsLoading(false);
     }
   };
 
-  const handleAuthSuccess = async (data: AuthSubmitData) => {
-    const defaultName = data.email
-      .split("@")[0]
-      .replace(/[._-]/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    const orgName = data.name || defaultName;
+  // Re-fetch when activeTab switches or when organization changes
+  useEffect(() => {
+    if (isAuthenticated && organization.id && organization.id !== "#40192") {
+      loadDashboardData(organization.id, true);
+    }
+  }, [organization.id, isAuthenticated, activeTab]);
 
-    // Persist or fetch provider account in Cloud Firestore via Django backend
-    const syncRes = await registerOrLoginProvider({
-      name: orgName,
-      email: data.email,
-      settlement: data.settlement || "Kibera",
-    });
+  // Real-time polling: Check for incoming resident applications every 5 seconds
+  useEffect(() => {
+    if (!isAuthenticated || !organization.id || organization.id === "#40192") return;
+    const interval = setInterval(() => {
+      loadDashboardData(organization.id, true);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, organization.id]);
 
-    setOrganization({
-      id: syncRes.providerId,
-      name: orgName,
-      shortName: orgName.slice(0, 10),
-      email: data.email,
-      settlement: data.settlement || "Kibera",
-      verified: true,
-    });
-    setIsAuthenticated(true);
+  const loadListings = async () => {
+    await loadDashboardData(organization.id);
+  };
+
+  const handleAuthSuccess = async (
+    data: AuthSubmitData
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (data.isRegister) {
+      const defaultName = data.email
+        .split("@")[0]
+        .replace(/[._-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const orgName = data.name || defaultName;
+
+      const regRes = await registerOrLoginProvider({
+        name: orgName,
+        email: data.email,
+        password: data.password,
+        settlement: data.settlement || "Kibera",
+      });
+
+      if (regRes.error) {
+        return { success: false, error: regRes.error };
+      }
+
+      const newOrg = {
+        id: regRes.providerId,
+        name: orgName,
+        shortName: orgName.slice(0, 12),
+        email: data.email,
+        settlement: data.settlement || "Kibera",
+        verified: true,
+      };
+
+      setOrganization(newOrg);
+      setIsAuthenticated(true);
+      try {
+        localStorage.setItem("huduma_provider_session", JSON.stringify(newOrg));
+      } catch {}
+      await loadDashboardData(regRes.providerId);
+      return { success: true };
+    } else {
+      // Authenticate against Cloud Firestore users collection
+      const authRes = await loginProvider(data.email, data.password);
+      if (!authRes.success || !authRes.user) {
+        return { success: false, error: authRes.error || "Authentication failed" };
+      }
+
+      const user = authRes.user;
+      const orgId = user.provider_id || user.id;
+      const newOrg = {
+        id: orgId,
+        name: user.name,
+        shortName: user.name.slice(0, 12),
+        email: user.email,
+        settlement: user.settlement,
+        verified: user.verified ?? true,
+      };
+
+      setOrganization(newOrg);
+      setIsAuthenticated(true);
+      try {
+        localStorage.setItem("huduma_provider_session", JSON.stringify(newOrg));
+      } catch {}
+      await loadDashboardData(orgId);
+      return { success: true };
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem("huduma_provider_session");
+    } catch {}
   };
 
   const handleAddListing = async (newListing: Partial<ServiceListing>) => {
@@ -100,10 +187,13 @@ export default function ProviderPortalApp() {
     }
   };
 
-  const handleUpdateAppStatus = (appId: string, newStatus: ApplicationStatus) => {
+  const handleUpdateAppStatus = async (appId: string, newStatus: ApplicationStatus) => {
+    // Optimistic local update
     setApplications((prev) =>
       prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
     );
+    // Sync with backend API and Cloud Firestore
+    await updateApplicationStatus(appId, newStatus);
   };
 
   // Compute live metrics dynamically from current listings
@@ -178,7 +268,7 @@ export default function ProviderPortalApp() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <Header
             title={getHeaderTitle()}
-            onLogout={() => setIsAuthenticated(false)}
+            onLogout={handleLogout}
           />
 
           {/* Live API / Fallback Status Badge */}
