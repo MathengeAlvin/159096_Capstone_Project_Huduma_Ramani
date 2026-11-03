@@ -272,6 +272,7 @@ def recommend_services_view(request):
 def submit_rating_view(request):
     """
     Submits a 1-to-5 star rating from a resident and updates Bayesian metrics.
+    Only permitted after the resident's application has been marked 'COMPLETED' (attended to).
     """
     resident_id = request.data.get("resident_id", "anonymous")
     service_id = request.data.get("service_id")
@@ -288,6 +289,25 @@ def submit_rating_view(request):
     except Service.DoesNotExist:
         return Response({"error": "Service not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    # Verification check: only residents whose application is marked COMPLETED (attended to) can rate
+    completed_app = Application.objects.filter(
+        service=service,
+        status="COMPLETED",
+    ).filter(
+        Q(resident_id=resident_id) |
+        Q(resident_id__iexact=resident_id) |
+        Q(applicant_name__iexact=resident_id)
+    ).first()
+
+    if not completed_app:
+        return Response(
+            {
+                "error": "You can only rate a provider after your application has been approved and marked as 'Attended to' by the provider.",
+                "code": "ATTENDANCE_REQUIRED",
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     rating_int = max(1, min(5, int(rating_val)))
     Rating.objects.update_or_create(
         resident_id=resident_id,
@@ -295,18 +315,53 @@ def submit_rating_view(request):
         defaults={"rating_value": rating_int, "provider": service.provider},
     )
 
-    # Recalculate service rating
+    # Recalculate service rating and review count
     ratings_qs = Rating.objects.filter(service=service)
     avg_rating = round(sum(r.rating_value for r in ratings_qs) / ratings_qs.count(), 1)
     service.rating = avg_rating
     service.review_count = ratings_qs.count()
     service.save()
 
+    # Recalculate provider Bayesian score to feed the hybrid recommendation engine
+    if service.provider:
+        p = service.provider
+        prov_ratings = Rating.objects.filter(provider=p)
+        if prov_ratings.exists():
+            v = prov_ratings.count()
+            r = sum(rt.rating_value for rt in prov_ratings) / v
+            c = 4.2  # global prior mean
+            m = 5.0  # prior threshold weight
+            bayes = (v * r + m * c) / (v + m)
+            p.bayesian_score = round(bayes, 2)
+            p.save()
+
+    # Sync to Cloud Firestore
+    db = get_firestore_client()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if db:
+        try:
+            db.collection("services").document(service.service_id).set({
+                "rating": service.rating,
+                "review_count": service.review_count,
+                "updated_at": now_iso,
+            }, merge=True)
+
+            db.collection("ratings").document(f"{resident_id}_{service.service_id}").set({
+                "resident_id": resident_id,
+                "service_id": service.service_id,
+                "provider_id": service.provider.provider_id if service.provider else "",
+                "rating": rating_int,
+                "created_at": now_iso,
+            })
+        except Exception as e:
+            print(f"[Firestore Rating Sync Warning] {e}")
+
     return Response({
         "status": "success",
         "service_id": service_id,
         "new_rating": avg_rating,
         "total_reviews": service.review_count,
+        "bayesian_score": service.provider.bayesian_score if service.provider else 4.0,
     })
 
 

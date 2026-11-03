@@ -228,7 +228,7 @@ export async function submitLiveRating(
   serviceId: string,
   ratingValue: number,
   residentId: string = "resident_mobile_user"
-): Promise<{ success: boolean; newRating?: number; totalReviews?: number }> {
+): Promise<{ success: boolean; newRating?: number; totalReviews?: number; error?: string }> {
   try {
     const res = await fetch(`${API_BASE_URL}/ratings/`, {
       method: "POST",
@@ -240,16 +240,21 @@ export async function submitLiveRating(
       }),
     });
 
-    if (!res.ok) return { success: false };
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        success: false,
+        error: data.error || "Rating submission rejected. Please ensure your intake has been marked as attended to.",
+      };
+    }
     return {
       success: true,
       newRating: data.new_rating,
       totalReviews: data.total_reviews,
     };
-  } catch (err) {
+  } catch (err: any) {
     console.warn("[Huduma Mobile API] Rating submission failed, handled offline:", err);
-    return { success: false };
+    return { success: false, error: "Network error submitting rating." };
   }
 }
 

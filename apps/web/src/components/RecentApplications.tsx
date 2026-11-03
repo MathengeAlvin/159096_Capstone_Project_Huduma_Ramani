@@ -31,8 +31,8 @@ export function RecentApplications({
         );
       case "COMPLETED":
         return (
-          <span className="inline-block px-3 py-1 rounded-full border border-neutral-200 text-[10px] font-black uppercase tracking-wider text-neutral-600 bg-neutral-100">
-            COMPLETED
+          <span className="inline-block px-3 py-1 rounded-full border border-emerald-300 text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50">
+            ATTENDED TO ✓
           </span>
         );
       case "REJECTED":
@@ -100,7 +100,21 @@ export function RecentApplications({
                     {app.date}
                   </td>
                   <td className="py-3.5 text-right">
-                    {getStatusBadge(app.status)}
+                    <div className="flex items-center justify-end gap-2">
+                      {getStatusBadge(app.status)}
+                      {app.status === "APPROVED" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateStatus?.(app.id, "COMPLETED");
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-emerald-500 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase transition-all cursor-pointer shadow-2xs"
+                          title="Click when resident has finished being attended to"
+                        >
+                          Mark Attended ✓
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -153,24 +167,55 @@ export function RecentApplications({
             <div className="pt-4 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-2">
               <span className="text-xs font-bold uppercase text-neutral-600 self-start sm:self-auto">Action:</span>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
-                <button
-                  onClick={() => {
-                    onUpdateStatus?.(selectedApp.id, "APPROVED");
-                    setSelectedApp({ ...selectedApp, status: "APPROVED" });
-                  }}
-                  className="px-3.5 py-1.5 rounded-full border border-[#00A082]/40 bg-[#E6F6F3] hover:bg-[#D5EFEA] text-[#00A082] text-xs font-black uppercase transition-all cursor-pointer"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => {
-                    onUpdateStatus?.(selectedApp.id, "REJECTED");
-                    setSelectedApp({ ...selectedApp, status: "REJECTED" });
-                  }}
-                  className="px-3.5 py-1.5 rounded-full border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black uppercase transition-all cursor-pointer"
-                >
-                  Deny / Reject
-                </button>
+                {selectedApp.status === "PENDING" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        onUpdateStatus?.(selectedApp.id, "APPROVED");
+                        setSelectedApp({ ...selectedApp, status: "APPROVED" });
+                      }}
+                      className="px-3.5 py-1.5 rounded-full border border-[#00A082]/40 bg-[#E6F6F3] hover:bg-[#D5EFEA] text-[#00A082] text-xs font-black uppercase transition-all cursor-pointer"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => {
+                        onUpdateStatus?.(selectedApp.id, "REJECTED");
+                        setSelectedApp({ ...selectedApp, status: "REJECTED" });
+                      }}
+                      className="px-3.5 py-1.5 rounded-full border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black uppercase transition-all cursor-pointer"
+                    >
+                      Deny / Reject
+                    </button>
+                  </>
+                )}
+                {selectedApp.status === "APPROVED" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        onUpdateStatus?.(selectedApp.id, "COMPLETED");
+                        setSelectedApp({ ...selectedApp, status: "COMPLETED" });
+                      }}
+                      className="px-3.5 py-1.5 rounded-full border border-emerald-600 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase transition-all cursor-pointer shadow-xs flex items-center gap-1.5"
+                    >
+                      <span>Mark as Attended to ✓</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onUpdateStatus?.(selectedApp.id, "REJECTED");
+                        setSelectedApp({ ...selectedApp, status: "REJECTED" });
+                      }}
+                      className="px-3.5 py-1.5 rounded-full border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-black uppercase transition-all cursor-pointer"
+                    >
+                      Cancel / Reject
+                    </button>
+                  </>
+                )}
+                {selectedApp.status === "COMPLETED" && (
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-full">
+                    Customer Attended to ✓ (Rating Unlocked)
+                  </span>
+                )}
                 <button
                   onClick={() => setSelectedApp(null)}
                   className="px-3.5 py-1.5 rounded-full bg-[#FFC244] hover:bg-[#F5B42E] text-[#1E1E1E] text-xs font-black uppercase transition-all cursor-pointer"

@@ -28,7 +28,11 @@ export function SearchScreen({
   initialQuery = "",
 }: SearchScreenProps) {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === "android" ? Math.max((StatusBar.currentHeight ?? 0) + 12, 44) : 0,
+    Platform.OS === "ios" ? 44 : 24
+  );
 
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -45,7 +49,7 @@ export function SearchScreen({
   });
 
   return (
-    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 10 }]}>
       <View style={styles.container}>
         {/* Top Search Bar (Glovo Pill) */}
         <View style={styles.searchHeader}>

@@ -32,7 +32,11 @@ export function ProfileScreen({
   onLogout,
 }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === "android" ? Math.max((StatusBar.currentHeight ?? 0) + 12, 44) : 0,
+    Platform.OS === "ios" ? 44 : 24
+  );
 
   const getStatusBadge = (status: ApplicationStatus) => {
     switch (status) {
@@ -54,11 +58,11 @@ export function ProfileScreen({
         };
       case "COMPLETED":
         return {
-          label: "COMPLETED",
-          bgColor: "#F3F4F6",
-          borderColor: "#E5E7EB",
-          textColor: "#4B5563",
-          icon: "ribbon" as const,
+          label: "ATTENDED TO ✓",
+          bgColor: "#E6F6F3",
+          borderColor: "#A3E2D5",
+          textColor: "#00A082",
+          icon: "checkmark-circle" as const,
         };
       case "PENDING":
       default:
@@ -73,7 +77,7 @@ export function ProfileScreen({
   };
 
   return (
-    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 10 }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Avatar matching Glovo style */}
         <View style={styles.avatarSection}>
@@ -147,6 +151,31 @@ export function ProfileScreen({
                     </View>
 
                     {/* Status description box */}
+                    {app.status === "COMPLETED" && (
+                      <View style={styles.completedNoticeBox}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                            <Ionicons name="ribbon-outline" size={15} color="#00A082" />
+                            <Text style={styles.completedNoticeText}>
+                              Intake Completed & Attended to!
+                            </Text>
+                          </View>
+                          <Text style={styles.completedNoticeSub}>
+                            You are verified to rate this facility and inform community recommendations.
+                          </Text>
+                        </View>
+                        {onSelectServiceById && (
+                          <TouchableOpacity
+                            style={styles.rateProfileBtn}
+                            onPress={() => onSelectServiceById(app.serviceId)}
+                            activeOpacity={0.8}
+                          >
+                            <Ionicons name="star" size={12} color="#FFFFFF" />
+                            <Text style={styles.rateProfileBtnText}>Rate Now</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    )}
                     {app.status === "APPROVED" && (
                       <View style={styles.approvedNoticeBox}>
                         <Ionicons name="checkmark-circle-outline" size={15} color="#00A082" />
@@ -377,6 +406,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 0.4,
+  },
+  completedNoticeBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0FDF4",
+    borderWidth: 1,
+    borderColor: "#A3E2D5",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+  },
+  completedNoticeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#00A082",
+  },
+  completedNoticeSub: {
+    fontSize: 11,
+    color: "#065F46",
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  rateProfileBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#00A082",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    marginLeft: 8,
+    ...GlovoTheme.shadows.soft,
+  },
+  rateProfileBtnText: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#FFFFFF",
   },
   approvedNoticeBox: {
     flexDirection: "row",

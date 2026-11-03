@@ -174,7 +174,29 @@ export default function App() {
   };
 
   const handleRateService = async (serviceId: string, rating: number) => {
-    await submitLiveRating(serviceId, rating, currentUser.id);
+    const res = await submitLiveRating(serviceId, rating, currentUser.id);
+    if (res.success && res.newRating !== undefined) {
+      setServices((prev) =>
+        prev.map((s) =>
+          s.id === serviceId
+            ? { ...s, rating: res.newRating!, reviewCount: res.totalReviews ?? s.reviewCount + 1 }
+            : s
+        )
+      );
+      setMapServices((prev) =>
+        prev.map((s) =>
+          s.id === serviceId
+            ? { ...s, rating: res.newRating!, reviewCount: res.totalReviews ?? s.reviewCount + 1 }
+            : s
+        )
+      );
+      setSelectedService((prev) =>
+        prev && prev.id === serviceId
+          ? { ...prev, rating: res.newRating!, reviewCount: res.totalReviews ?? prev.reviewCount + 1 }
+          : prev
+      );
+    }
+    return res;
   };
 
   const handleApplyForService = async (
