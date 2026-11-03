@@ -25,7 +25,10 @@ interface ServiceDetailScreenProps {
   onBack: () => void;
   isBookmarked: boolean;
   onToggleBookmark: (serviceId: string) => void;
-  onRateService: (serviceId: string, rating: number) => void;
+  onRateService: (
+    serviceId: string,
+    rating: number
+  ) => Promise<{ success: boolean; newRating?: number; totalReviews?: number; error?: string } | void> | void;
   existingApplication?: MobileApplication;
   onApplyForService?: (serviceId: string, phone: string, notes: string) => Promise<boolean>;
 }
@@ -41,7 +44,11 @@ export function ServiceDetailScreen({
   onApplyForService,
 }: ServiceDetailScreenProps) {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === "android" ? Math.max((StatusBar.currentHeight ?? 0) + 12, 44) : 0,
+    Platform.OS === "ios" ? 44 : 24
+  );
 
   const [userRating, setUserRating] = useState<number>(0);
   const [hasRated, setHasRated] = useState(false);
@@ -52,18 +59,38 @@ export function ServiceDetailScreen({
   const [applicationNotes, setApplicationNotes] = useState("");
   const [isSubmittingApp, setIsSubmittingApp] = useState(false);
 
-  const handleStarPress = (rating: number) => {
+  const isAttendedTo = existingApplication?.status === "COMPLETED";
+
+  const handleStarPress = async (rating: number) => {
+    if (!isAttendedTo) {
+      Alert.alert(
+        "Verified Ratings Only 🔒",
+        "Ratings can only be submitted after your service intake has been completed and marked as 'Attended to' by the provider."
+      );
+      return;
+    }
     setUserRating(rating);
+    const res = await onRateService(service.id, rating);
+    if (res && typeof res === "object" && res.success === false) {
+      Alert.alert("Rating Error", res.error || "Unable to submit rating at this time.");
+      return;
+    }
     setHasRated(true);
-    onRateService(service.id, rating);
   };
 
   const handleOpenApplyModal = () => {
     if (existingApplication) {
+      if (existingApplication.status === "COMPLETED") {
+        Alert.alert(
+          "Intake Completed ✓",
+          "Your service intake for " + service.name + " has already been completed and marked as 'Attended to' by the provider. You can rate this facility below."
+        );
+        return;
+      }
       if (existingApplication.status === "APPROVED") {
         Alert.alert(
           "Application Approved ✓",
-          "Your application has been APPROVED by the provider! You can visit them in person or call them at " + service.phone
+          "Your application has been APPROVED by the provider! You can visit them in person or call them at " + service.phone + ". Once the provider marks you as 'Attended to', rating will unlock."
         );
         return;
       }
@@ -240,9 +267,9 @@ export function ServiceDetailScreen({
         };
       case "COMPLETED":
         return {
-          text: "Intake Completed",
-          bgColor: "#F3F4F6",
-          textColor: "#4B5563",
+          text: "Attended to — Rate Below ★",
+          bgColor: "#E6F6F3",
+          textColor: "#00A082",
           icon: "ribbon" as const,
         };
       case "PENDING":
@@ -259,7 +286,7 @@ export function ServiceDetailScreen({
   const btnProps = getApplyButtonProps();
 
   return (
-    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 10 }]}>
       <View style={styles.container}>
         {/* Top Header with Back Button */}
         <View style={styles.topHeader}>
@@ -300,6 +327,7 @@ export function ServiceDetailScreen({
             <View
               style={[
                 styles.appStatusBanner,
+                existingApplication.status === "COMPLETED" && styles.bannerCompleted,
                 existingApplication.status === "APPROVED" && styles.bannerApproved,
                 existingApplication.status === "REJECTED" && styles.bannerRejected,
                 existingApplication.status === "PENDING" && styles.bannerPending,
@@ -307,7 +335,9 @@ export function ServiceDetailScreen({
             >
               <Ionicons
                 name={
-                  existingApplication.status === "APPROVED"
+                  existingApplication.status === "COMPLETED"
+                    ? "ribbon"
+                    : existingApplication.status === "APPROVED"
                     ? "checkmark-circle"
                     : existingApplication.status === "REJECTED"
                     ? "alert-circle"
@@ -315,7 +345,9 @@ export function ServiceDetailScreen({
                 }
                 size={22}
                 color={
-                  existingApplication.status === "APPROVED"
+                  existingApplication.status === "COMPLETED"
+                    ? "#00A082"
+                    : existingApplication.status === "APPROVED"
                     ? "#00A082"
                     : existingApplication.status === "REJECTED"
                     ? "#E11D48"
@@ -328,7 +360,9 @@ export function ServiceDetailScreen({
                     styles.bannerStatusTitle,
                     {
                       color:
-                        existingApplication.status === "APPROVED"
+                        existingApplication.status === "COMPLETED"
+                          ? "#00A082"
+                          : existingApplication.status === "APPROVED"
                           ? "#00A082"
                           : existingApplication.status === "REJECTED"
                           ? "#E11D48"
@@ -336,13 +370,19 @@ export function ServiceDetailScreen({
                     },
                   ]}
                 >
-                  {existingApplication.status === "REJECTED"
+                  {existingApplication.status === "COMPLETED"
+                    ? "Intake Completed — Attended to ✓"
+                    : existingApplication.status === "REJECTED"
                     ? "Application Declined — You Can Reapply"
+                    : existingApplication.status === "APPROVED"
+                    ? "Application Approved — Awaiting Intake"
                     : `Application Status: ${existingApplication.status}`}
                 </Text>
                 <Text style={styles.bannerStatusSub}>
-                  {existingApplication.status === "APPROVED"
-                    ? "Your request was accepted by the provider! You can visit them in person or expect follow-up."
+                  {existingApplication.status === "COMPLETED"
+                    ? "The provider has marked your service intake as completed! Your verified rating is now unlocked below."
+                    : existingApplication.status === "APPROVED"
+                    ? "Your request was accepted by the provider! Visit the facility and once they mark you as attended to, verified ratings will unlock."
                     : existingApplication.status === "REJECTED"
                     ? "The provider was unable to accommodate your previous request. You may update your reasons and submit a new application below."
                     : `Submitted on ${existingApplication.date}. Awaiting provider approval.`}
@@ -450,39 +490,81 @@ export function ServiceDetailScreen({
             </View>
           </View>
 
-          {/* Rate This Service Panel */}
-          <View style={styles.ratingPanel}>
-            <Text style={styles.ratingPanelTitle}>Rate this service</Text>
-            <Text style={styles.ratingPanelSub}>Your rating informs the Bayesian recommendation engine</Text>
-            <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => {
-                const filled = star <= userRating;
-                return (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() => handleStarPress(star)}
-                    hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name={filled ? "star" : "star-outline"}
-                      size={32}
-                      color={filled ? GlovoTheme.colors.primary : "#D1D5DB"}
-                      style={styles.starIcon}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {hasRated && (
-              <View style={styles.ratingConfirmationBox}>
-                <Ionicons name="checkmark-circle" size={16} color={GlovoTheme.colors.secondary} />
-                <Text style={styles.ratingConfirmation}>
-                  Thank you! Your feedback adjusts quality rankings in {service.settlement}.
-                </Text>
+          {/* Rate This Service Panel - Verified Attendance Unlocks Rating */}
+          {isAttendedTo ? (
+            <View style={styles.ratingPanel}>
+              <View style={styles.verifiedRatingBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#00A082" />
+                <Text style={styles.verifiedRatingBadgeText}>VERIFIED ATTENDEE • RATING UNLOCKED</Text>
               </View>
-            )}
-          </View>
+              <Text style={styles.ratingPanelTitle}>Rate this service</Text>
+              <Text style={styles.ratingPanelSub}>
+                Your verified review recalibrates the facility&apos;s Bayesian score and community recommendations.
+              </Text>
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const filled = star <= userRating;
+                  return (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => handleStarPress(star)}
+                      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={filled ? "star" : "star-outline"}
+                        size={32}
+                        color={filled ? GlovoTheme.colors.primary : "#D1D5DB"}
+                        style={styles.starIcon}
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {hasRated && (
+                <View style={styles.ratingConfirmationBox}>
+                  <Ionicons name="checkmark-circle" size={16} color={GlovoTheme.colors.secondary} />
+                  <Text style={styles.ratingConfirmation}>
+                    Thank you! Your verified rating was recorded and Bayesian weights have been updated.
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.ratingLockedPanel}>
+              <View style={styles.ratingLockIconCircle}>
+                <Ionicons name="lock-closed" size={22} color="#6B7280" />
+              </View>
+              <Text style={styles.ratingLockedTitle}>Verified Ratings Only</Text>
+              <Text style={styles.ratingLockedSub}>
+                {existingApplication?.status === "APPROVED"
+                  ? "Your application is approved! Once the provider marks you as 'Attended to' after your visit, rating will unlock."
+                  : existingApplication?.status === "PENDING"
+                  ? "Your application is pending provider review. Ratings unlock after being attended to."
+                  : "To protect community integrity, ratings are only unlocked for residents whose intake has been completed and marked as 'Attended to' by the provider."}
+              </Text>
+              <View style={styles.disabledStarsRow}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name="star-outline"
+                    size={24}
+                    color="#D1D5DB"
+                    style={{ marginHorizontal: 4 }}
+                  />
+                ))}
+              </View>
+              {!existingApplication && (
+                <TouchableOpacity
+                  style={styles.applyToRateBtn}
+                  onPress={handleOpenApplyModal}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.applyToRateBtnText}>Apply for Service to Verify Visit</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </ScrollView>
 
         {/* Bottom Actions Row with Glovo Yellow Primary Button */}
@@ -715,9 +797,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 16,
   },
-  bannerApproved: {
+  bannerCompleted: {
     backgroundColor: "#E6F6F3",
     borderColor: "#A3E2D5",
+  },
+  bannerApproved: {
+    backgroundColor: "#F0FDF4",
+    borderColor: "#86EFAC",
   },
   bannerRejected: {
     backgroundColor: "#FFF1F2",
@@ -897,12 +983,78 @@ const styles = StyleSheet.create({
   },
   ratingPanel: {
     borderRadius: GlovoTheme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: GlovoTheme.colors.border,
-    backgroundColor: GlovoTheme.colors.background,
+    borderWidth: 1.5,
+    borderColor: "#A3E2D5",
+    backgroundColor: "#F0FDF4",
     padding: 16,
     marginBottom: 16,
     alignItems: "center",
+  },
+  verifiedRatingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#E6F6F3",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    borderWidth: 1,
+    borderColor: "#A3E2D5",
+    marginBottom: 8,
+  },
+  verifiedRatingBadgeText: {
+    fontSize: 10,
+    fontWeight: "900",
+    color: "#00A082",
+    letterSpacing: 0.5,
+  },
+  ratingLockedPanel: {
+    borderRadius: GlovoTheme.borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+    padding: 18,
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  ratingLockIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  ratingLockedTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: GlovoTheme.colors.textDark,
+    marginBottom: 4,
+  },
+  ratingLockedSub: {
+    fontSize: 12,
+    color: GlovoTheme.colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 17,
+    paddingHorizontal: 8,
+    marginBottom: 12,
+  },
+  disabledStarsRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
+  applyToRateBtn: {
+    backgroundColor: GlovoTheme.colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: GlovoTheme.borderRadius.pill,
+    ...GlovoTheme.shadows.soft,
+  },
+  applyToRateBtnText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: GlovoTheme.colors.textDark,
   },
   ratingPanelTitle: {
     fontSize: 14,

@@ -26,10 +26,14 @@ export function SavedScreen({
   onRemoveBookmark,
 }: SavedScreenProps) {
   const insets = useSafeAreaInsets();
-  const topInset = Math.max(insets.top, Platform.OS === "android" ? (StatusBar.currentHeight ?? 28) : 0, 24);
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === "android" ? Math.max((StatusBar.currentHeight ?? 0) + 12, 44) : 0,
+    Platform.OS === "ios" ? 44 : 24
+  );
 
   return (
-    <View style={[styles.safeArea, { paddingTop: topInset + 8 }]}>
+    <View style={[styles.safeArea, { paddingTop: topInset + 10 }]}>
       <View style={styles.container}>
         {/* Header Title */}
         <View style={styles.header}>
