@@ -114,6 +114,18 @@ export function RecentApplications({
                           Mark Attended ✓
                         </button>
                       )}
+                      {app.status === "COMPLETED" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateStatus?.(app.id, "APPROVED");
+                          }}
+                          className="px-2.5 py-1 rounded-full border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-black uppercase transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                          title="Revert attended status and revoke rating permission"
+                        >
+                          <span>Revert ↺</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -212,9 +224,21 @@ export function RecentApplications({
                   </>
                 )}
                 {selectedApp.status === "COMPLETED" && (
-                  <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-full">
-                    Customer Attended to ✓ (Rating Unlocked)
-                  </span>
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                    <span className="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-full">
+                      Customer Attended to ✓ (Rating Unlocked)
+                    </span>
+                    <button
+                      onClick={() => {
+                        onUpdateStatus?.(selectedApp.id, "APPROVED");
+                        setSelectedApp({ ...selectedApp, status: "APPROVED" });
+                      }}
+                      className="px-3.5 py-1.5 rounded-full border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-black uppercase transition-all cursor-pointer flex items-center gap-1.5"
+                      title="Revert attendance back to Approved and revoke rating ability"
+                    >
+                      <span>Revert Attendance ↺</span>
+                    </button>
+                  </div>
                 )}
                 <button
                   onClick={() => setSelectedApp(null)}

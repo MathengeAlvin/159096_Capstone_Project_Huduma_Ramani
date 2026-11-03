@@ -199,8 +199,42 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, *args, **kwargs):
+        prev_status = self.get_object().status
         response = super().partial_update(request, *args, **kwargs)
         instance = self.get_object()
+
+        # If provider reverts an applicant from COMPLETED back to APPROVED,
+        # revoke any rating submitted by this resident for this service
+        if prev_status == "COMPLETED" and instance.status == "APPROVED":
+            revoked_ratings = Rating.objects.filter(
+                service=instance.service,
+                resident_id=instance.resident_id,
+            ).exclude(resident_id__startswith="synthetic_")
+
+            if revoked_ratings.exists():
+                revoked_ratings.delete()
+
+                # Recalculate service rating and review count from remaining ratings
+                svc = instance.service
+                r_qs = Rating.objects.filter(service=svc)
+                if r_qs.exists():
+                    svc.rating = round(sum(r.rating_value for r in r_qs) / r_qs.count(), 1)
+                    svc.review_count = r_qs.count()
+                else:
+                    svc.rating = 4.5
+                    svc.review_count = 0
+                svc.save()
+
+                # Recalculate provider Bayesian score
+                if svc.provider:
+                    p = svc.provider
+                    p_qs = Rating.objects.filter(provider=p)
+                    if p_qs.exists():
+                        v = p_qs.count()
+                        r = sum(rt.rating_value for rt in p_qs) / v
+                        bayes = (v * r + 5.0 * 4.2) / (v + 5.0)
+                        p.bayesian_score = round(bayes, 2)
+                        p.save()
 
         # Sync status change to Cloud Firestore
         db = get_firestore_client()
@@ -211,6 +245,13 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                     "status": instance.status,
                     "updated_at": now_iso,
                 }, merge=True)
+
+                if prev_status == "COMPLETED" and instance.status == "APPROVED" and instance.service:
+                    db.collection("services").document(instance.service.service_id).set({
+                        "rating": instance.service.rating,
+                        "review_count": instance.service.review_count,
+                        "updated_at": now_iso,
+                    }, merge=True)
             except Exception as e:
                 print(f"[Firestore Sync Warning] Failed to update application {instance.application_id}: {e}")
 

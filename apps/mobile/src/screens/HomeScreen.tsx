@@ -119,73 +119,79 @@ export function HomeScreen({
           </View>
         </View>
 
-        {/* OpenStreetMap Interactive View (Renders All Settlement Providers) */}
-        <MapViewComponent
-          services={mapServices.length > 0 ? mapServices : services}
-          recommendedServices={services}
-          onSelectService={onSelectService}
-          settlement={user.settlement}
-          onSettlementChange={onSettlementChange}
-        />
+        {/* Vertically Scrollable Content below Header */}
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          {/* OpenStreetMap Interactive View (Renders All Settlement Providers) */}
+          <MapViewComponent
+            services={mapServices.length > 0 ? mapServices : services}
+            recommendedServices={services}
+            onSelectService={onSelectService}
+            settlement={user.settlement}
+            onSettlementChange={onSettlementChange}
+          />
 
-        {/* Recommended for You Carousel */}
-        <View style={styles.carouselSection}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionTitle}>Recommended for You</Text>
-              <Text style={styles.sectionSubtitle}>
-                Ranked for {user.name} • {user.interests.slice(0, 2).join(", ")}
-              </Text>
+          {/* Recommended for You Carousel */}
+          <View style={styles.carouselSection}>
+            <View style={styles.sectionHeader}>
+              <View>
+                <Text style={styles.sectionTitle}>Recommended for You</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Ranked for {user.name} • {user.interests.slice(0, 2).join(", ")}
+                </Text>
+              </View>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{services.length} Facilities</Text>
+              </View>
             </View>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{services.length} Facilities</Text>
-            </View>
-          </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.carouselContainer}
-          >
-            {services.map((item, index) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.card}
-                onPress={() => onSelectService(item)}
-                activeOpacity={0.8}
-              >
-                {/* Image Placeholder with Glovo Warm Tint */}
-                <View style={styles.imagePlaceholder}>
-                  <Ionicons
-                    name="business"
-                    size={26}
-                    color={GlovoTheme.colors.primaryHover}
-                  />
-                  <View style={styles.rankBadge}>
-                    <Text style={styles.rankText}>#{index + 1} Top Pick</Text>
-                  </View>
-                </View>
-
-                {/* Card Text Content */}
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.cardCategory} numberOfLines={1}>
-                    {item.category}
-                  </Text>
-                  <View style={styles.ratingRow}>
-                    <View style={styles.starPill}>
-                      <Ionicons name="star" size={11} color={GlovoTheme.colors.star} />
-                      <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carouselContainer}
+            >
+              {services.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.card}
+                  onPress={() => onSelectService(item)}
+                  activeOpacity={0.8}
+                >
+                  {/* Image Placeholder with Glovo Warm Tint */}
+                  <View style={styles.imagePlaceholder}>
+                    <Ionicons
+                      name="business"
+                      size={24}
+                      color={GlovoTheme.colors.primaryHover}
+                    />
+                    <View style={styles.rankBadge}>
+                      <Text style={styles.rankText}>#{index + 1} Top Pick</Text>
                     </View>
-                    <Text style={styles.distanceBadge}>{item.distanceKm} km</Text>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+
+                  {/* Card Text Content */}
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.cardName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.cardCategory} numberOfLines={1}>
+                      {item.category}
+                    </Text>
+                    <View style={styles.ratingRow}>
+                      <View style={styles.starPill}>
+                        <Ionicons name="star" size={11} color={GlovoTheme.colors.star} />
+                        <Text style={styles.ratingText}>
+                          {typeof item.rating === "number" ? item.rating.toFixed(1) : "4.5"}
+                        </Text>
+                      </View>
+                      <Text style={styles.reviewsCountText}>({item.reviewCount ?? 5})</Text>
+                      <Text style={styles.distanceBadge}>{item.distanceKm} km</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -308,8 +314,10 @@ const styles = StyleSheet.create({
     backgroundColor: GlovoTheme.colors.white,
     ...GlovoTheme.shadows.soft,
   },
+  scrollContent: {
+    paddingBottom: 28,
+  },
   carouselSection: {
-    flex: 1,
     paddingTop: 14,
     backgroundColor: GlovoTheme.colors.white,
   },
@@ -358,7 +366,7 @@ const styles = StyleSheet.create({
     ...GlovoTheme.shadows.soft,
   },
   imagePlaceholder: {
-    height: 88,
+    height: 76,
     backgroundColor: GlovoTheme.colors.primaryLight, // Warm cream yellow
     position: "relative",
     justifyContent: "center",
@@ -380,7 +388,9 @@ const styles = StyleSheet.create({
     color: GlovoTheme.colors.textDark,
   },
   cardInfo: {
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 10,
   },
   cardName: {
     fontSize: 13,
@@ -397,21 +407,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 8,
+    marginTop: 6,
+    gap: 4,
   },
   starPill: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FEF3C7",
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: GlovoTheme.borderRadius.xs,
-    gap: 3,
+    gap: 2,
   },
   ratingText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: "800",
     color: "#92400E",
+  },
+  reviewsCountText: {
+    fontSize: 9.5,
+    fontWeight: "600",
+    color: GlovoTheme.colors.textMuted,
   },
   distanceBadge: {
     fontSize: 10,

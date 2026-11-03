@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     backgroundColor: GlovoTheme.colors.white,
     borderBottomWidth: 1,
     borderBottomColor: GlovoTheme.colors.border,
-    height: 310,
+    height: 255,
     position: "relative",
     display: "flex",
     flexDirection: "column",
