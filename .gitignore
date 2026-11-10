@@ -44,3 +44,7 @@ db.sqlite3
 
 # Model
 Model/
+
+# Firebase & GCP Service Account Keys
+*serviceAccountKey*.json
+serviceAccountKey.json
