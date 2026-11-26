@@ -202,7 +202,8 @@ export default function App() {
   const handleApplyForService = async (
     serviceId: string,
     phone: string,
-    notes: string
+    notes: string,
+    appointmentDate: string
   ): Promise<boolean> => {
     const res = await submitServiceApplication({
       residentId: currentUser.id,
@@ -210,6 +211,7 @@ export default function App() {
       applicantPhone: phone,
       serviceId,
       notes,
+      appointmentDate,
     });
 
     if (res.success && res.application) {

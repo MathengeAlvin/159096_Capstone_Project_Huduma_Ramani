@@ -61,6 +61,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "service_title",
             "provider_name",
             "notes",
+            "appointment_date",
             "status",
             "created_at",
             "updated_at",

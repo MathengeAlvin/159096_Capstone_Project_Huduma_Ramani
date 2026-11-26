@@ -30,7 +30,7 @@ interface ServiceDetailScreenProps {
     rating: number
   ) => Promise<{ success: boolean; newRating?: number; totalReviews?: number; error?: string } | void> | void;
   existingApplication?: MobileApplication;
-  onApplyForService?: (serviceId: string, phone: string, notes: string) => Promise<boolean>;
+  onApplyForService?: (serviceId: string, phone: string, notes: string, appointmentDate: string) => Promise<boolean>;
 }
 
 export function ServiceDetailScreen({
@@ -57,6 +57,7 @@ export function ServiceDetailScreen({
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [applicantPhone, setApplicantPhone] = useState("+254 7");
   const [applicationNotes, setApplicationNotes] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
   const [isSubmittingApp, setIsSubmittingApp] = useState(false);
 
   const isAttendedTo = existingApplication?.status === "COMPLETED";
@@ -119,13 +120,24 @@ export function ServiceDetailScreen({
       Alert.alert("Contact Required", "Please provide a valid phone number so the provider can reach you.");
       return;
     }
+    if (!appointmentDate.trim()) {
+      Alert.alert("Date Required", "Please select a preferred appointment date so the provider can schedule your intake.");
+      return;
+    }
+    // Basic YYYY-MM-DD validation
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(appointmentDate.trim())) {
+      Alert.alert("Invalid Date", "Please enter the date in YYYY-MM-DD format (e.g. 2026-12-01).");
+      return;
+    }
 
     const isReapplication = existingApplication?.status === "REJECTED";
     setIsSubmittingApp(true);
     const success = await onApplyForService(
       service.id,
       applicantPhone.trim(),
-      applicationNotes.trim()
+      applicationNotes.trim(),
+      appointmentDate.trim()
     );
     setIsSubmittingApp(false);
 
@@ -652,6 +664,22 @@ export function ServiceDetailScreen({
                     keyboardType="phone-pad"
                     placeholderTextColor={GlovoTheme.colors.textMuted}
                   />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>PREFERRED APPOINTMENT DATE *</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={appointmentDate}
+                    onChangeText={setAppointmentDate}
+                    placeholder="YYYY-MM-DD (e.g. 2026-12-01)"
+                    keyboardType="numbers-and-punctuation"
+                    placeholderTextColor={GlovoTheme.colors.textMuted}
+                    maxLength={10}
+                  />
+                  <Text style={{ fontSize: 10, color: GlovoTheme.colors.textMuted, marginTop: 3 }}>
+                    Enter your preferred visit date. The provider will confirm availability.
+                  </Text>
                 </View>
 
                 <View style={styles.inputGroup}>

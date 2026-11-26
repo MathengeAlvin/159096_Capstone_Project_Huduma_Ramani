@@ -506,6 +506,7 @@ export async function submitServiceApplication(payload: {
   applicantPhone: string;
   serviceId: string;
   notes: string;
+  appointmentDate?: string;
 }): Promise<{ success: boolean; application?: MobileApplication; error?: string }> {
   try {
     const res = await fetchWithTimeout(`${API_BASE_URL}/applications/`, {
@@ -517,6 +518,7 @@ export async function submitServiceApplication(payload: {
         applicant_phone: payload.applicantPhone,
         service_id: payload.serviceId,
         notes: payload.notes,
+        appointment_date: payload.appointmentDate || null,
       }),
     }, 8000);
 
