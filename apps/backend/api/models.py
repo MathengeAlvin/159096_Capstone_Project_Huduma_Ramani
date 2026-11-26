@@ -109,6 +109,7 @@ class Application(models.Model):
     service_title = models.CharField(max_length=255, blank=True, null=True)
     provider_name = models.CharField(max_length=255, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    appointment_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default="PENDING")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

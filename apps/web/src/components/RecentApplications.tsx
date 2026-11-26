@@ -79,7 +79,8 @@ export function RecentApplications({
               <tr className="border-b-2 border-neutral-100 text-[11px] font-black uppercase tracking-wider text-[#1E1E1E]">
                 <th className="pb-3 pr-4">Applicant Name</th>
                 <th className="pb-3 pr-4">Service Requested</th>
-                <th className="pb-3 pr-4">Date</th>
+                <th className="pb-3 pr-4">Submitted</th>
+                <th className="pb-3 pr-4">Appointment Date</th>
                 <th className="pb-3 text-right">Status</th>
               </tr>
             </thead>
@@ -98,6 +99,15 @@ export function RecentApplications({
                   </td>
                   <td className="py-3.5 pr-4 font-mono text-xs text-neutral-500">
                     {app.date}
+                  </td>
+                  <td className="py-3.5 pr-4 font-mono text-xs text-neutral-500">
+                    {(app as any).appointmentDate ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-semibold">
+                        📅 {(app as any).appointmentDate}
+                      </span>
+                    ) : (
+                      <span className="text-neutral-300 italic">Not set</span>
+                    )}
                   </td>
                   <td className="py-3.5 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -161,6 +171,16 @@ export function RecentApplications({
               <div>
                 <span className="text-xs font-bold uppercase text-neutral-500 block">Submission Date</span>
                 <span className="font-mono text-xs text-neutral-600">{selectedApp.date}</span>
+              </div>
+              <div>
+                <span className="text-xs font-bold uppercase text-neutral-500 block">Preferred Appointment Date</span>
+                {(selectedApp as any).appointmentDate ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-semibold text-xs mt-1">
+                    📅 {(selectedApp as any).appointmentDate}
+                  </span>
+                ) : (
+                  <span className="text-xs text-neutral-400 italic">No date requested</span>
+                )}
               </div>
               <div>
                 <span className="text-xs font-bold uppercase text-neutral-500 block">Current Status</span>
