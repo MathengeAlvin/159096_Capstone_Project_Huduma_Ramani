@@ -368,6 +368,7 @@ export interface DjangoApplicationPayload {
   service_title?: string;
   provider_name?: string;
   notes?: string;
+  appointment_date?: string | null;
   status: ApplicationStatus;
   created_at: string;
   updated_at: string;
@@ -395,6 +396,7 @@ export function mapDjangoToServiceApplication(data: DjangoApplicationPayload): S
     serviceRequested: data.service_title || "Community Service",
     serviceId: data.service,
     date: dateStr,
+    appointmentDate: data.appointment_date || undefined,
     status: data.status,
     notes: combinedNotes || undefined,
   };

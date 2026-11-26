@@ -35,6 +35,7 @@ export interface ServiceApplication {
   serviceRequested: string;
   serviceId: string;
   date: string;
+  appointmentDate?: string;
   status: ApplicationStatus;
   notes?: string;
 }

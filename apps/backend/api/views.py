@@ -125,6 +125,17 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         applicant_phone = data.get("applicant_phone", "")
         service_id = data.get("service_id")
         notes = data.get("notes", "")
+        raw_appointment_date = data.get("appointment_date")
+        appointment_date = None
+        if raw_appointment_date:
+            from datetime import date as dt_date
+            try:
+                appointment_date = dt_date.fromisoformat(str(raw_appointment_date).strip())
+            except ValueError:
+                return Response(
+                    {"error": "appointment_date must be in YYYY-MM-DD format"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if not service_id:
             return Response(
@@ -158,6 +169,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             existing_app.applicant_name = applicant_name
             existing_app.applicant_phone = applicant_phone
             existing_app.notes = notes
+            existing_app.appointment_date = appointment_date
             existing_app.save()
             app = existing_app
         else:
@@ -170,6 +182,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                 service_title=service.title,
                 provider_name=provider.name,
                 notes=notes,
+                appointment_date=appointment_date,
                 status="PENDING",
             )
 
@@ -188,6 +201,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
                     "provider_id": provider.provider_id,
                     "provider_name": provider.name,
                     "notes": notes,
+                    "appointment_date": appointment_date.isoformat() if appointment_date else None,
                     "status": "PENDING",
                     "created_at": now_iso,
                     "updated_at": now_iso,
