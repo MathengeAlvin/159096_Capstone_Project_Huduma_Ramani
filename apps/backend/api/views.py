@@ -607,7 +607,7 @@ def login_user_view(request):
     stored_password = user_data.get("password") or "Huduma@2026"
     if password != stored_password and password != "Huduma@2026":
         return Response(
-            {"error": "Invalid password. (Default directory provider password is 'Huduma@2026')"},
+            {"error": "Invalid password. Please check your credentials and try again."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
