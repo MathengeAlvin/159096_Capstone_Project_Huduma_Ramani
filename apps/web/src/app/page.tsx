@@ -114,10 +114,18 @@ export default function ProviderPortalApp() {
         return { success: false, error: regRes.error };
       }
 
+      const initials = orgName
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0].toUpperCase())
+        .join("") || "HR";
+
       const newOrg = {
         id: regRes.providerId,
         name: orgName,
-        shortName: orgName.slice(0, 12),
+        shortName: initials,
         email: data.email,
         settlement: data.settlement || "Kibera",
         verified: true,
@@ -139,10 +147,18 @@ export default function ProviderPortalApp() {
 
       const user = authRes.user;
       const orgId = user.provider_id || user.id;
+      const initials = (user.name || "HR")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0].toUpperCase())
+        .join("") || "HR";
+
       const newOrg = {
         id: orgId,
         name: user.name,
-        shortName: user.name.slice(0, 12),
+        shortName: initials,
         email: user.email,
         settlement: user.settlement,
         verified: user.verified ?? true,

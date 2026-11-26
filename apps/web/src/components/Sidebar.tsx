@@ -71,15 +71,41 @@ export function Sidebar({ activeTab, setActiveTab, organization }: SidebarProps)
 
       {/* Organization Badge Footer */}
       <div className="p-4 border-t border-neutral-100">
-        <div className="flex items-center gap-3 p-3 rounded-2xl border border-[#FDE68A] bg-[#FFFBEB]">
-          <div className="w-10 h-10 rounded-xl bg-[#FFC244] flex items-center justify-center font-black text-sm text-[#1E1E1E] shrink-0 shadow-xs">
-            {organization.shortName}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-[#1E1E1E] truncate">{organization.name}</p>
-            <p className="text-[11px] text-neutral-500 font-mono">ID: {organization.id}</p>
-          </div>
-        </div>
+        {(() => {
+          const initials =
+            (organization.name || organization.shortName || "HR")
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((w) => w[0].toUpperCase())
+              .join("") || "HR";
+          return (
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] shadow-2xs">
+              <div className="w-10 h-10 rounded-xl bg-[#FFC244] flex items-center justify-center font-black text-sm tracking-tight text-[#1E1E1E] shrink-0 shadow-xs overflow-hidden">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p
+                  className="text-xs font-extrabold text-[#1E1E1E] truncate"
+                  title={organization.name}
+                >
+                  {organization.name}
+                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] text-neutral-500 font-mono truncate">
+                    {organization.id}
+                  </span>
+                  {organization.settlement && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-white border border-[#FDE68A] text-amber-800 shrink-0">
+                      {organization.settlement}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </aside>
   );

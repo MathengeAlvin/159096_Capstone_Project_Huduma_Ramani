@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle, KeyRound, CheckCircle2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export interface AuthSubmitData {
   email: string;
@@ -17,8 +17,8 @@ interface LoginCardProps {
 
 export function LoginCard({ onLoginSuccess }: LoginCardProps) {
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("prv_0007@huduma.org");
-  const [password, setPassword] = useState("Huduma@2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
   const [settlement, setSettlement] = useState<"Kibera" | "Mathare">("Kibera");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,19 +61,6 @@ export function LoginCard({ onLoginSuccess }: LoginCardProps) {
             Provider Portal — {isRegister ? "Register" : "Cloud Firestore Log In"}
           </p>
         </div>
-
-        {/* Credentials Tip for existing 242 providers */}
-        {!isRegister && (
-          <div className="mt-4 p-3 rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] text-left flex items-start gap-2.5">
-            <KeyRound className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
-            <div className="text-[11px] text-neutral-700 leading-snug">
-              <span className="font-bold text-[#1E1E1E]">242 Directory Accounts Ready:</span> All facility providers have accounts in Cloud Firestore with default password{" "}
-              <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-[#FDE68A] text-[#1E1E1E] font-bold">
-                Huduma@2026
-              </code>
-            </div>
-          </div>
-        )}
 
         {/* Error message alert */}
         {errorMessage && (
